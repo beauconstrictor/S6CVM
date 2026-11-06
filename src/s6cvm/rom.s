@@ -139,7 +139,7 @@ fail:
   .word 0x0a00
 
 welcome:
-  .string "S6CBC 0.1.0"
+  .string "S6CVM 0.1.0"
   .word 0x0a0a
   .string "OK"
   .word 0x0a00
