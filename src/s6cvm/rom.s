@@ -145,6 +145,7 @@ interpret:
   ceq byte #OP_JSR @jsr
   jmp fail
 @pus:
+  readc parse byte
   push byte dsp
   jmp interpret
 @drp:
