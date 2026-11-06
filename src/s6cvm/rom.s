@@ -125,7 +125,6 @@ repl:
 ; executes the subroutine in addr
 interpret:
   readc addr byte
-  ld addr byte
   ceq byte #OP_BRK repl
   ceq byte #OP_PUS @pus
   ceq byte #OP_DRP @swp
@@ -145,7 +144,7 @@ interpret:
   ceq byte #OP_JSR @jsr
   jmp fail
 @pus:
-  readc parse byte
+  readc addr byte
   push byte dsp
   jmp interpret
 @drp:
