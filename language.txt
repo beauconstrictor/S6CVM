@@ -1,0 +1,97 @@
+the language will look like this:
+
+> {:negate <x : -x> (sub 0 over)}
+> 
+> {:test (negate 5) (if 32 {(print "Hello!")})}
+
+this code is preprocessed with a few steps:
+
+1. decommenting
+  -> text surrounded by angled brackets, or after a hashtag, is
+      removed.
+
+> {:negate (sub 0 over)}
+> 
+> {:main (negate 5) (if 32 {(print "Hello!")})}
+
+2. deparenthisation
+  -> sequences of words surrounded by parentheses have their first
+     word moved to the end, to go from prefix to postfix.
+    
+> {:negate 0 over sub}
+> 
+> {:main 5 negate 32 {"Hello!" print} if}
+
+3. destringifying
+  -> text surrounded by double quotes is replaced with a block
+     containing raw bytes (_-prefixed literals)
+
+> {:negate 0 over sub}
+> 
+> {:main 5 32 {{_72 _101 _108 _108 _111 _33} print} if}
+
+4. naming
+  -> anonymous blocks are converted to named blocks
+
+> {:negate 0 over sub}
+> {:___inline_0 _72 _101 _108 _108 _111 _33}
+> {:___inline_1 ___inline_0 print}
+> {:main 5 32 ___inline_1 if}
+
+once the code has been preprocessed, it is compiled. this is
+essentially where the code is taken and converted to it's binary
+format. the binary format is simply a list of blocks, with addresses
+and contents. these addresses begin at 0x0800. and end at 0x4000,
+giving about 14K for program data.
+
+we need to make two passes:
+
+pass 1: finding labels
+
+  to do this, a counter is kept, starting at 0x0800. then, we iterate
+  over each block. then, for each word in a block, we decideit's type.
+  
+  by this point, there should be 3 types of word:
+    -> literals. literals increment the counter by 2. (2 bytes per
+         push instruction, and one byte to push)
+    -> labels. labels increment the counter by 4. (2 bytes per push
+         byte instruction, and two bytes to push)
+    -> inline byte: increments the counter by 1.
+    -> instructions: fundamental instructions, like over and sub.
+         some of these take non-stack operands, which should go
+         before the name of the instruction, but are _not_ appended
+         to the stack.
+  
+  then, whenever we encounter the start of a block, we can record the
+  block's name and the current value of the counter, giving us the
+  address of every label without having to actually compile anything
+  just yet, allowing forward references later
+
+pass 2: compilation
+
+  now, we can begin to actually assemble the binary. for every block,
+  we simply iterate over its words like before, this time actually
+  deciding on the bytes of each one. this is now possible, because
+  we have a reference to each label's address.
+
+  finally, we append an inline call to the address of the 'main'
+  block to the binary, to get the program actually started.
+
+  keep in mind that the binary isn't actually generated in raw binary
+  format, but in a format suitable for an S6CVM tape. this format
+  accepts actual individual blocks (made of an address and a list of
+  bytes), as well as inline calls (exactly what we need). that means
+  the compiled version of our above program might look like this:
+
+> {:negate 0 over sub}
+> {:___inline_0 _72 _101 _108 _108 _111 _33}
+> {:___inline_1 ___inline_0 print}
+> {:main 5 32 ___inline_1 if}
+
+> :1000 01 00 04 06;                negate
+> :1004 48 65 6c 6c 6f 31;          ___inline_0
+> :100b 01 10 01 04 PRINT;          ___inline_1. we don't know print in this example.
+> :1010 01 05 01 20 01 10 01 0b IF; main. we don't know if either.
+
+this program doesn't actually make any sense, but it deomonstrates
+the syntax reasonably well.
