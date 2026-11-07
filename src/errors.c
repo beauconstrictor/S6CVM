@@ -8,7 +8,7 @@
 bool colour_allowed(void) {
   if (getenv("NO_COLOR") != NULL)
       return false;
-  if (!isatty(STDOUT_FILENO))
+  if (!isatty(STDERR_FILENO))
       return 0;
 
   const char *term = getenv("TERM");
