@@ -6,7 +6,9 @@
 #include "errors.h"
 
 bool colour_allowed(void) {
-  if (getenv("NO_COLOR") != NULL)
+  const char *no_color = getenv("NO_COLOR");
+
+  if (no_color != NULL && no_color[0] != '\0')
       return false;
   if (!isatty(STDERR_FILENO))
       return 0;
