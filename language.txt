@@ -40,13 +40,15 @@ this code is preprocessed with a few steps:
 
 3. destringifying
   -> text surrounded by double quotes is replaced with a block
-     containing raw bytes (_-prefixed literals)
+     containing raw bytes (_-prefixed literals). these raw bytes
+     are not supported directly in the syntax, and are only used
+     here are a textual version of the intermediate representation
 
 > {:negate 0 over sub}
 > 
 > {:main 5 32 {{_72 _101 _108 _108 _111 _33} print} if}
 
-4. naming
+4. deanonymification
   -> anonymous blocks are converted to named blocks
 
 > {:negate 0 over sub}

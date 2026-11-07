@@ -65,11 +65,8 @@ int main(void) {
   Tokens toks = create_tokens();
   Error error = {0};
 
-  lexer(f, program, &toks, &error);
-  check_error(&error);
-
-  preprocessor(&toks, &error);
-  check_error(&error);
+  if (!lexer(f, program, &toks, &error)) check_error(&error);
+  if (!preprocessor(&toks, &error)) check_error(&error);
 
   for (size_t i = 0; i < toks.count; i++) {
     Token tok = toks.items[i];

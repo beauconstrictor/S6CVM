@@ -1,14 +1,15 @@
-// 1. deparenthisation
+// 1. deparenthesisation
 //   -> keep a stack of the first word after parentheses, then
 //      move it to the closing paren
 //
 // 2. destringifying
 //   -> convert string literals to anonymous blocks
 //
-// 3. naming
+// 3. deanonymification
 //   -> move anonymous blocks to global named blocks, with internal
 //      names like ___anon_0
 
+#include <stdio.h>
 #include <stdbool.h>
 
 #include "tokeniser.h"
@@ -32,7 +33,8 @@ bool deparenthesise(Tokens *toks, Error *error) {
 
       append_token(toks->items[i+1], &prefix_words);
       remove_token(toks, i);
-      remove_token(toks, i--);
+      remove_token(toks, i);
+      i -= 2;
     } else if (tok.kind == TOKEN_RPARA) {
       remove_token(toks, i--);
       if (prefix_words.count == 0) {
@@ -54,6 +56,7 @@ bool deparenthesise(Tokens *toks, Error *error) {
       }
       remove_token(&prefix_words, prefix_words.count - 1);
       insert_token(toks, i+1, word);
+      i++;
     }
   }
 
@@ -69,8 +72,56 @@ bool deparenthesise(Tokens *toks, Error *error) {
   return true;
 }
 
+bool destringify(Tokens *toks, Error *error) {
+  (void)error;
+
+  for (size_t i = 0; i < toks->count; i++) {
+    Token tok = toks->items[i];
+    if (tok.kind != TOKEN_STRING) continue;
+  
+    insert_token(toks, i++, (Token) {
+        .kind = TOKEN_LBRACE,
+        .start = "{",
+        .length = 1,
+        .location = tok.location,
+    });
+
+    remove_token(toks, i--);
+
+    // TODO: this leaks memory if tokens are removed. that's not
+    // really a problem though for a short-lived compiler like this,
+    // so i think it's fine. maybe revisit?
+
+    const char *s = tok.start;
+    while (s < tok.start + tok.length) {
+      char *num = malloc(4);
+      if (num == NULL) return false;
+      int len = snprintf(num, 4, "%d", *s);
+
+      insert_token(toks, ++i, (Token) {
+          .kind = TOKEN_BYTE,
+          .start = num,
+          .length = len,
+          .location = tok.location,
+      });
+      s++;
+    }
+
+    insert_token(toks, ++i, (Token) {
+        .kind = TOKEN_RBRACE,
+        .start = "}",
+        .length = 1,
+        .location = tok.location,
+    });
+
+  }
+
+  return true;
+}
+
 bool preprocessor(Tokens *toks, Error *error) {
   if (!deparenthesise(toks, error)) return false;
+  if (!destringify(toks, error))    return false;
 
   return true;
 }

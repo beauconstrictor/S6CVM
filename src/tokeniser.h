@@ -13,7 +13,9 @@
   X(RPARA) \
   X(LBRACE) \
   X(RBRACE) \
-  X(WORD)
+  X(DEREF) \
+  X(WORD) \
+  X(BYTE) \
 
 #define X(name) TOKEN_##name,
 
@@ -26,7 +28,6 @@ typedef enum {
 typedef struct {
   TokenKind kind;
   const char *start;
-  const char *path;
   size_t length;
   Location location;
 } Token;
