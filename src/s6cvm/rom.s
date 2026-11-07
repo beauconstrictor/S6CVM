@@ -12,7 +12,7 @@
   ; opcode byte:
   .const OP_BRK 0x00
   ;   -> no operands. returns to repl
-  .const OP_PUS 0x01 ; x
+  .const OP_PSH 0x01 ; x
   ;   -> pushes byte
   .const OP_DRP 0x02
   ;   -> drops the top of the stack
@@ -44,8 +44,9 @@
   ;   -> push character; blocking
   .const OP_JSR 0x10
   ;   -> pop (word) a call it
-  .const OP_RET 0x1a
+  .const OP_RET 0x11
   ;   -> returns from subroutine
+  .const OP_WRD 0x12
 
   .include <stdlib>
   .include <stdascii>
@@ -128,7 +129,7 @@ repl:
 interpret:
   readc addr byte
   ceq byte #OP_BRK repl
-  ceq byte #OP_PUS @pus
+  ceq byte #OP_PSH @psh
   ceq byte #OP_DRP @drp
   ceq byte #OP_SWP @swp
   ceq byte #OP_OVR @ovr
@@ -144,9 +145,10 @@ interpret:
   ceq byte #OP_KEY @key
   ceq byte #OP_INP @inp
   ceq byte #OP_JSR @jsr
-  ceq byte #OP_RET ret
+  ceq byte #OP_RET  ret
+  ceq byte #OP_WRD @wrd
   jmp fail
-@pus:
+@psh:
   readc addr byte
   push byte dsp
   jmp interpret
@@ -236,6 +238,11 @@ interpret:
 @jsr:
   pullw dsp word
   call_bytecode word
+  jmp interpret
+@wrd:
+  readc addr word
+  readc addr (word 1 +)
+  pushw word dsp
   jmp interpret
 
 fail:

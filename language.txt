@@ -35,8 +35,8 @@ this code is preprocessed with a few steps:
 
 > {:negate 0 over sub}
 > {:___inline_0 _72 _101 _108 _108 _111 _33}
-> {:___inline_1 ___inline_0 print}
-> {:main 5 32 ___inline_1 if}
+> {:___inline_1 *___inline_0 print}
+> {:main 5 32 *___inline_1 if}
 
 once the code has been preprocessed, it is compiled. this is
 essentially where the code is taken and converted to it's binary
@@ -52,10 +52,10 @@ pass 1: finding labels
   over each block. then, for each word in a block, we decideit's type.
   
   by this point, there should be 3 types of word:
-    -> literals. literals increment the counter by 2. (2 bytes per
-         push instruction, and one byte to push)
-    -> labels. labels increment the counter by 4. (2 bytes per push
-         byte instruction, and two bytes to push)
+    -> literals. literals increment the counter by 2. for a push
+    -> function literals. function literals increment the counter by
+         4. (2 bytes per push byte instruction, and two bytes to
+         push)
     -> inline byte: increments the counter by 1.
     -> instructions: fundamental instructions, like over and sub.
          some of these take non-stack operands, which should go
