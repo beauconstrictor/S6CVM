@@ -2,11 +2,11 @@
 
 #include "tokeniser.h"
 
-const char *program = "{:negate <x : x -x>> (sub 234 over) \"Hello, world!\"}";
+const char *program = "{:negate <x : x -x> (sub 234 over) \"Hello, world!\"}";
 int main(void) {
   Tokens toks = create_tokens();
   Error error;
-  lexer(program, "<unknown>", &toks, &error);
+  lexer(program, "main.cvm", &toks, &error);
 
   if (error.set) {
     print_error(&error);

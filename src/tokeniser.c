@@ -133,7 +133,7 @@ int lexer(const char *s, const char *path, Tokens *toks, Error *error) {
     if (*s == '(') FLUSH_WITH_BRACK(LPARA);
     if (*s == ')') FLUSH_WITH_BRACK(RPARA);
 
-    if (isspace(*s)) {
+    if (isspace((unsigned char)*s)) {
       FLUSH_TOK(TOKEN_WORD);
       start = s + 1;
     } else if ((isdigit((unsigned char)*s)
@@ -148,7 +148,32 @@ int lexer(const char *s, const char *path, Tokens *toks, Error *error) {
       FLUSH_TOK(TOKEN_DEFINITION);
       continue;
     } else if (*s == '"' && start == s) {
-      EXHAUST_UNTIL("\"");
+      // TODO: these strings should probably be their own helper
+      //       function
+
+      while (true) {
+        s++;
+
+        if (*s == '\n') {
+          line++;
+          linestart = s;
+        }
+
+        if (s[-1] != '\\' && *s == '"') break;
+        if (*s == '\0') {
+          *error = (Error) {
+            .location = {
+              .line = line,
+              .col = s - linestart + 1,
+              .path = path,
+            },
+            .message = "unterminated string literal",
+            .set = true,
+          };
+          return 1;
+        }
+      }
+
       start++;
       FLUSH_TOK(TOKEN_STRING);
       start++; // move past final quote
