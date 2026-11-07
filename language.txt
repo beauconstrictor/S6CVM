@@ -4,6 +4,22 @@ the language will look like this:
 > 
 > {:main (negate 5) (if 32 {(print "Hello!")})}
 
+this code is tokenised like this:
+
+> {          - LBRACE
+> :negate    - DEFINITION
+> (          - LPARA
+> if         - WORD
+> 32         - NUMBER
+> {          - LBRACE
+> (          - LPARA
+> print      - WORD
+> "Hello!"   - STRING
+> )          - RPARA
+> }          - RBACE
+> )          - RPARA
+> }          - RBRACE
+
 this code is preprocessed with a few steps:
 
 1. decommenting
