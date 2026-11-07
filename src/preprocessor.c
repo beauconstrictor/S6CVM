@@ -68,3 +68,9 @@ bool deparenthesise(Tokens *toks, Error *error) {
 
   return true;
 }
+
+bool preprocessor(Tokens *toks, Error *error) {
+  if (!deparenthesise(toks, error)) return false;
+
+  return true;
+}

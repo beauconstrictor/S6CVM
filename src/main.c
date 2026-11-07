@@ -4,6 +4,8 @@
 #include "tokeniser.h"
 #include "preprocessor.h"
 
+const char *program = "test.cvm";
+
 void check_error(Error *error) {
   if (error->set) {
     print_error(error);
@@ -53,20 +55,20 @@ char *read_file(const char *path) {
   return contents;
 }
 
-const char *program = "test.cvm";
 int main(void) {
-  Tokens toks = create_tokens();
-  Error error;
-
   char *file = read_file(program);
   if (file == NULL) {
-    fprintf(stderr, "s6cvm: failed to open file '%s'", program);
+    perror("s6cvm");
+    return 1;
   }
+
+  Tokens toks = create_tokens();
+  Error error = {0};
 
   lexer(file, program, &toks, &error);
   check_error(&error);
 
-  deparenthesise(&toks, &error);
+  preprocessor(&toks, &error);
   check_error(&error);
 
   for (size_t i = 0; i < toks.count; i++) {

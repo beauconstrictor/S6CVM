@@ -1,1 +1,1 @@
-{:negate <x : x -x> (sub	234 over) "Hello, world!"}
+{:negate <x : x -x> (sub 234 over) "Hello, world!"}

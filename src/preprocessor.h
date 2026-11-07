@@ -6,4 +6,6 @@
 
 bool deparenthesise(Tokens *toks, Error *error);
 
+bool preprocessor(Tokens *toks, Error *error);
+
 #endif // PREPROCESSOR_H
