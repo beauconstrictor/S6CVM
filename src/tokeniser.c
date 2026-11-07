@@ -78,7 +78,7 @@ Tokens create_tokens(void) {
   };
 }
 
-int lexer(const char *s, const char *path, Tokens *toks, Error *error) {
+bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
   const char *start = s;
   const char *linestart = s;
   int    line = 1;
@@ -96,7 +96,7 @@ int lexer(const char *s, const char *path, Tokens *toks, Error *error) {
             .col = start - linestart + 1, \
           } \
         }; \
-        if (!append_token(tok, toks)) return 1; \
+        if (!append_token(tok, toks)) return false; \
       } \
       start = s; \
     } while (false)
@@ -114,7 +114,7 @@ int lexer(const char *s, const char *path, Tokens *toks, Error *error) {
           } \
         }; \
       start = s + 1; \
-      if (!append_token(tok, toks)) return 1; \
+      if (!append_token(tok, toks)) return false; \
     } while (false)
 
   #define EXHAUST(func) \
@@ -145,7 +145,7 @@ int lexer(const char *s, const char *path, Tokens *toks, Error *error) {
           .message = "'>' encountered outside of comment",
           .set = true,
         };
-        return 1;
+        return false;
       }
       comment_level--;
     }
@@ -203,7 +203,7 @@ int lexer(const char *s, const char *path, Tokens *toks, Error *error) {
             .message = "unterminated string literal",
             .set = true,
           };
-          return 1;
+          return false;
         }
       }
 
@@ -227,7 +227,7 @@ int lexer(const char *s, const char *path, Tokens *toks, Error *error) {
       .message = "unterminated comment",
       .set = true,
     };
-    return 1;
+    return false;
   }
 
   if (start < s) FLUSH_TOK(TOKEN_WORD);
@@ -237,6 +237,6 @@ int lexer(const char *s, const char *path, Tokens *toks, Error *error) {
   #undef EXHAUST
   #undef EXHAUST_UNTIL
 
-  return 0;
+  return true;
 }
 

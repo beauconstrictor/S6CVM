@@ -1,17 +1,73 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "tokeniser.h"
+#include "preprocessor.h"
 
-const char *program = "{:negate <x : x -x> (sub 234 over) \"Hello, world!\"}";
+void check_error(Error *error) {
+  if (error->set) {
+    print_error(error);
+    exit(1);
+  }
+}
+
+char *read_file(const char *path) {
+  FILE *file = fopen(path, "rb");
+
+  if (file == NULL) {
+    return NULL;
+  }
+
+  fseek(file, 0, SEEK_END);
+  long size = ftell(file);
+  rewind(file);
+
+  if (size < 0) {
+    fclose(file);
+    return NULL;
+  }
+
+  char *contents = malloc((size_t)size + 1);
+
+  if (contents == NULL) {
+    fclose(file);
+    return NULL;
+  }
+
+  size_t bytes_read = fread(contents, 1, (size_t)size, file);
+
+  fclose(file);
+
+  if (bytes_read != (size_t)size) {
+    free(contents);
+    return NULL;
+  }
+
+  contents[bytes_read] = '\0';
+
+  // remove terminating newline
+  if (bytes_read > 0 && contents[bytes_read - 1] == '\n') {
+    contents[--bytes_read] = '\0';
+  }
+
+  return contents;
+}
+
+const char *program = "test.cvm";
 int main(void) {
   Tokens toks = create_tokens();
   Error error;
-  lexer(program, "main.cvm", &toks, &error);
 
-  if (error.set) {
-    print_error(&error);
-    return 1;
+  char *file = read_file(program);
+  if (file == NULL) {
+    fprintf(stderr, "s6cvm: failed to open file '%s'", program);
   }
+
+  lexer(file, program, &toks, &error);
+  check_error(&error);
+
+  deparenthesise(&toks, &error);
+  check_error(&error);
 
   for (size_t i = 0; i < toks.count; i++) {
     Token tok = toks.items[i];

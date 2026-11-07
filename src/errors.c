@@ -24,11 +24,40 @@ bool colour_allowed(void) {
 void print_error(const Error *error) {
   bool colour = colour_allowed();
   const char *red    = colour ? "\033[31m" : "";
+  const char *bold   = colour ? "\033[1m"  : "";
   const char *yellow = colour ? "\033[33m" : "";
-  const char *bold   = colour ? "\033[1m" : "";
-  const char *reset  = colour ? "\033[0m" : "";
+  const char *dim    = colour ? "\033[2m"  : "";
+  const char *reset  = colour ? "\033[0m"  : "";
 
-  fprintf(stderr, "%ss6cvm: %s%s%s:%zu:%zu:%s %s\n",
-      red, yellow, bold, error->location.path, error->location.line,
-      error->location.col, reset, error->message);
+  fprintf(stderr, "%s%s:%zu:%zu: %serror: %s%s\n", bold,
+      error->location.path, error->location.line,
+      error->location.col, red, reset, error->message);
+
+  FILE *f = fopen(error->location.path, "r");
+
+  // if we can't show the error line for whatever reason, we just
+  // don't bother
+  if (f == NULL) {
+    fprintf(stderr, "\n");
+    return;
+  }
+
+  char line[4096];
+
+  for (size_t i = 1; i <= error->location.line; i++) {
+    if (fgets(line, sizeof(line), f) == NULL) {
+      fclose(f);
+      fprintf(stderr, "\n");
+      return;
+    }
+  }
+
+  fprintf(stderr, "%s%5zu | %s%s", dim, error->location.line, reset,
+      line);
+  fprintf(stderr, "%s%5s | %s", dim, "", reset);
+  for (size_t i = 0; i < error->location.col-1; i++)
+    fputc(' ', stderr);
+  fprintf(stderr, "%s^%s\n\n", yellow, reset);
+
+  fclose(f);
 }

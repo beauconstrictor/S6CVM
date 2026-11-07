@@ -44,6 +44,6 @@ bool insert_token(Tokens *tokens, size_t index, Token tok);
 bool remove_token(Tokens *tokens, size_t index);
 
 const char *token_kind_name(TokenKind kind);
-int lexer(const char *s, const char *path, Tokens *tokens, Error *error);
+bool lexer(const char *s, const char *path, Tokens *tokens, Error *error);
 
 #endif // TOKENISER_H
