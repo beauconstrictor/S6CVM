@@ -73,7 +73,7 @@ bool deparenthesise(Tokens *toks, Error *error) {
 }
 
 bool destringify(Tokens *toks, Error *error) {
-  (void)error;
+  (void) error; // doesn't actually produce any errors yet, but will
 
   for (size_t i = 0; i < toks->count; i++) {
     Token tok = toks->items[i];
@@ -113,15 +113,24 @@ bool destringify(Tokens *toks, Error *error) {
         .length = 1,
         .location = tok.location,
     });
-
   }
 
   return true;
 }
 
+bool deanonymify(Tokens *toks, Error *error) {
+  (void) toks;
+  (void) error;
+
+  // TODO!
+
+  return false;
+}
+
 bool preprocessor(Tokens *toks, Error *error) {
   if (!deparenthesise(toks, error)) return false;
   if (!destringify(toks, error))    return false;
+  if (!deanonymify(toks, error))    return false;
 
   return true;
 }

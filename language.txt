@@ -105,7 +105,7 @@ pass 2: compilation
 > {:main 5 32 *___inline_1 if}
 
 > :0800 01 00 04 06 ;               negate
-> :0804 48 65 6c 6c 6f 31 ;         ___inline_0
+> :0804 48 65 6c 6c 6f 20 ;         ___inline_0
 > :080a 12 08 04 10 PRINT ;         ___inline_1
 > :0810 01 05 01 20 12 08 0a IF ;   main
 
