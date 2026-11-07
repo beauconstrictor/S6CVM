@@ -166,6 +166,20 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
     if (*s == '(') FLUSH_WITH_BRACK(LPARA);
     if (*s == ')') FLUSH_WITH_BRACK(RPARA);
 
+    if (*s == '\t') {
+      // TODO: also ban tabs in strings, using \t instead (but
+      //       esapes aren't supported at all yet
+      *error = (Error) {
+        .location = {
+          .line = line,
+          .col = s - linestart + 1,
+          .path = path,
+        },
+        .message = "tabs are not allowed in source",
+        .set = true,
+      };
+      return false;
+    }
     if (isspace((unsigned char)*s)) {
       FLUSH_TOK(TOKEN_WORD);
       start = s + 1;

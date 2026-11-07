@@ -52,7 +52,9 @@ void print_error(const Error *error) {
     }
   }
 
-  fprintf(stderr, "%s%5zu | %s%s", dim, error->location.line, reset,
+  // TODO: this looks fucked with tabs
+
+  fprintf(stderr, "%5zu %s|%s %s", error->location.line, dim, reset,
       line);
   fprintf(stderr, "%s%5s | %s", dim, "", reset);
   for (size_t i = 0; i < error->location.col-1; i++)
