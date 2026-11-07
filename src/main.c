@@ -1,10 +1,11 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include <stdbool.h>
 
-const char *program = "{:negate <x : x -x> (sub 234 over)}";
+const char *program = "{:negate <x : x -x> (sub 234 over) \"Hello, world!\"}";
 
 #define TOKEN_TYPES \
   X(NUMBER) \
@@ -104,7 +105,22 @@ Tokens lexer(const char *s) {
       start = s + 1; \
       append_token(tok, &toks); \
     } while (false)
+
+  #define EXHAUST(func) \
+    do { \
+      while (func(*++s)) {} \
+    } while (false)
+
+  #define EXHAUST_CHRS(chrs) \
+    do { \
+      while (strchr(chrs, *++s)) {} \
+    } while (false)
   
+  #define EXHAUST_NCHRS(chrs) \
+    do { \
+      while (!strchr(chrs, *++s)) {} \
+    } while (false)
+
   int comment_level = 0;
 
   while (*s) {
@@ -117,14 +133,13 @@ Tokens lexer(const char *s) {
       comment_level--;
     }
 
+    if (*s == '\n') line++;
+
     if (comment_level > 0 || *s == '>') {
-      if (*s == '\n') line++;
       s++;
       start = s;
       continue;
     };
-
-    if (*s == '\n') line++;
 
     if (*s == '{') FLUSH_WITH_BRACK(LBRACE);
     if (*s == '}') FLUSH_WITH_BRACK(RBRACE);
@@ -134,14 +149,19 @@ Tokens lexer(const char *s) {
     if (isspace(*s)) {
       FLUSH_TOK(TOKEN_WORD);
       start = s + 1;
-    } else if (isdigit(*s) && start == s) {
-      while (isdigit(*++s)) {}
+    } else if ((isdigit(*s) || *s == '-') && start == s) {
+      EXHAUST(isdigit);
       FLUSH_TOK(TOKEN_NUMBER);
       continue;
     } else if (*s == ':' && start == s) {
+      EXHAUST(!isspace);
       start++;
-      while (isalnum(*++s)) {}
       FLUSH_TOK(TOKEN_DEFINITION);
+      continue;
+    } else if (*s == '"' && start == s) {
+      EXHAUST_NCHRS("\"");
+      start++;
+      FLUSH_TOK(TOKEN_STRING);
       continue;
     }
 
