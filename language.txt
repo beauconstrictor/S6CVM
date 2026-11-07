@@ -2,7 +2,7 @@ the language will look like this:
 
 > {:negate <x : x -x> (sub 0 over)}
 > 
-> {:test (negate 5) (if 32 {(print "Hello!")})}
+> {:main (negate 5) (if 32 {(print "Hello!")})}
 
 this code is preprocessed with a few steps:
 
@@ -44,6 +44,9 @@ format. the binary format is simply a list of blocks, with addresses
 and contents. these addresses begin at 0x0800. and end at 0x4000,
 giving about 14K for program data.
 
+these asterisks, btw, represent function literals. essentially,
+instead of actually calling a block, they just push it's addresss.
+
 we need to make two passes:
 
 pass 1: finding labels
@@ -51,16 +54,11 @@ pass 1: finding labels
   to do this, a counter is kept, starting at 0x0800. then, we iterate
   over each block. then, for each word in a block, we decideit's type.
   
-  by this point, there should be 3 types of word:
-    -> literals. literals increment the counter by 2. for a push
-    -> function literals. function literals increment the counter by
-         4. (2 bytes per push byte instruction, and two bytes to
-         push)
-    -> inline byte: increments the counter by 1.
-    -> instructions: fundamental instructions, like over and sub.
-         some of these take non-stack operands, which should go
-         before the name of the instruction, but are _not_ appended
-         to the stack.
+  by this point, there should be these types of word per block:
+    -> literals: increment counter by 2, for a 'psh' instruction
+    -> function literals: increment counter by 3, for a 'wrd'
+    -> inline bytes: increment counter by 1
+    -> functions: increment counter by 4, for a 'wrd' followed by a 'jsr'
   
   then, whenever we encounter the start of a block, we can record the
   block's name and the current value of the counter, giving us the
@@ -85,13 +83,13 @@ pass 2: compilation
 
 > {:negate 0 over sub}
 > {:___inline_0 _72 _101 _108 _108 _111 _33}
-> {:___inline_1 ___inline_0 print}
-> {:main 5 32 ___inline_1 if}
+> {:___inline_1 *___inline_0 print}
+> {:main 5 32 *___inline_1 if}
 
-> :1000 01 00 04 06;                negate
-> :1004 48 65 6c 6c 6f 31;          ___inline_0
-> :100b 01 10 01 04 PRINT;          ___inline_1. we don't know print in this example.
-> :1010 01 05 01 20 01 10 01 0b IF; main. we don't know if either.
+> :1000 01 00 04 06 ;               negate
+> :1004 48 65 6c 6c 6f 31 ;         ___inline_0
+> :100a 12 10 04 10 PRINT ;         ___inline_1
+> :1010 01 05 01 20 12 10 0a IF ;   main
 
 this program doesn't actually make any sense, but it demonstrates
 the syntax reasonably well.

@@ -46,7 +46,8 @@
   ;   -> pop (word) a call it
   .const OP_RET 0x11
   ;   -> returns from subroutine
-  .const OP_WRD 0x12
+  .const OP_WRD 0x12 ; (word) x
+  ;   -> pushes word
 
   .include <stdlib>
   .include <stdascii>
