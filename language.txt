@@ -1,6 +1,6 @@
 the language will look like this:
 
-> {:negate <x : -x> (sub 0 over)}
+> {:negate <x : x -x> (sub 0 over)}
 > 
 > {:test (negate 5) (if 32 {(print "Hello!")})}
 
@@ -93,5 +93,5 @@ pass 2: compilation
 > :100b 01 10 01 04 PRINT;          ___inline_1. we don't know print in this example.
 > :1010 01 05 01 20 01 10 01 0b IF; main. we don't know if either.
 
-this program doesn't actually make any sense, but it deomonstrates
+this program doesn't actually make any sense, but it demonstrates
 the syntax reasonably well.

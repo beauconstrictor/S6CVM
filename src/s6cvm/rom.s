@@ -12,7 +12,7 @@
   ; opcode byte:
   .const OP_BRK 0x00
   ;   -> no operands. returns to repl
-  .const OP_PUS 0x001 ; x
+  .const OP_PUS 0x01 ; x
   ;   -> pushes byte
   .const OP_DRP 0x02
   ;   -> drops the top of the stack
@@ -28,8 +28,8 @@
   ;   -> push whether top two items are equal (bool)
   .const OP_GTR 0x08
   ;   -> push b and then a. push whether a > b
-  .const OP_BCH 0x09 ; (word) x  (word) y
-  ;   -> pop a. calls x if a != 0, else calls y
+  .const OP_BCH 0x09
+  ;   -> pop (word) c then (word) b and then a. if a == 0, call subroutine c else call b
   .const OP_LOD 0x0a
   ;   -> pop a. push byte at address a
   .const OP_STO 0x0b
@@ -42,8 +42,10 @@
   ;   -> push character; non blocking
   .const OP_INP 0x0f
   ;   -> push character; blocking
-  .const OP_JSR 0x10 ; operands: (word) x
-  ;   -> call subroutine x
+  .const OP_JSR 0x10
+  ;   -> pop (word) a call it
+  .const OP_RET 0x1a
+  ;   -> returns from subroutine
 
   .include <stdlib>
   .include <stdascii>
@@ -127,7 +129,7 @@ interpret:
   readc addr byte
   ceq byte #OP_BRK repl
   ceq byte #OP_PUS @pus
-  ceq byte #OP_DRP @swp
+  ceq byte #OP_DRP @drp
   ceq byte #OP_SWP @swp
   ceq byte #OP_OVR @ovr
   ceq byte #OP_ADD @add
@@ -142,6 +144,7 @@ interpret:
   ceq byte #OP_KEY @key
   ceq byte #OP_INP @inp
   ceq byte #OP_JSR @jsr
+  ceq byte #OP_RET ret
   jmp fail
 @pus:
   readc addr byte
@@ -195,11 +198,12 @@ interpret:
   push #0 byte
   jmp interpret
 @bch:
-  read_binw word
-  read_binw word2
+  pullw dsp word2
+  pullw dsp word
   pull dsp byte
   beq byte @not_bch
   call_bytecode word
+  jmp interpret
 @not_bch:
   call_bytecode word2
   jmp interpret
@@ -230,7 +234,7 @@ interpret:
   push byte dsp
   jmp interpret
 @jsr:
-  read_binw word
+  pullw dsp word
   call_bytecode word
   jmp interpret
 
