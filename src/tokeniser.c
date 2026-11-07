@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#include "errors.h"
+
 #include "tokeniser.h"
 
 const char *token_kind_name(TokenKind kind) {
@@ -43,11 +45,10 @@ Tokens create_tokens(void) {
   };
 }
 
-Tokens lexer(const char *s) {
-  Tokens toks = create_tokens();
-  
+int lexer(const char *s, const char *path, Tokens *toks, Error *error) {
   const char *start = s;
-  int    line = 0;
+  const char *linestart = s;
+  int    line = 1;
 
   #define FLUSH_TOK(type) \
     do { \
@@ -56,9 +57,13 @@ Tokens lexer(const char *s) {
           .kind = type, \
           .start = start, \
           .length = s - start, \
-          .line = line, \
+          .location = { \
+            .path = path, \
+            .line = line, \
+            .col = start - linestart + 1, \
+          } \
         }; \
-        append_token(tok, &toks); \
+        if (!append_token(tok, toks)) return 1; \
       } \
       start = s; \
     } while (false)
@@ -69,23 +74,22 @@ Tokens lexer(const char *s) {
         .kind = TOKEN_##type, \
         .start = s, \
         .length = 1, \
-        .line = line, \
-      }; \
+          .location = { \
+            .path = path, \
+            .line = line, \
+            .col = s- linestart + 1, \
+          } \
+        }; \
       start = s + 1; \
-      append_token(tok, &toks); \
+      if (!append_token(tok, toks)) return 1; \
     } while (false)
 
   #define EXHAUST(func) \
     do { \
-      while (func(*++s)) {} \
+      while (func((unsigned char)*++s)) {} \
     } while (false)
 
-  #define EXHAUST_CHRS(chrs) \
-    do { \
-      while (strchr(chrs, *++s)) {} \
-    } while (false)
-  
-  #define EXHAUST_NCHRS(chrs) \
+  #define EXHAUST_UNTIL(chrs) \
     do { \
       while (!strchr(chrs, *++s)) {} \
     } while (false)
@@ -98,11 +102,25 @@ Tokens lexer(const char *s) {
       comment_level++;
     }
     if (*s == '>') {
-      assert(comment_level > 0); // '>' encountered outside of comment. TODO: actual error system
+      if (comment_level == 0) {
+        *error = (Error) {
+          .location = {
+            .line = line,
+            .col = s - linestart + 1,
+            .path = path,
+          },
+          .message = "'>' encountered outside of comment",
+          .set = true,
+        };
+        return 1;
+      }
       comment_level--;
     }
 
-    if (*s == '\n') line++;
+    if (*s == '\n') {
+      line++;
+      linestart = s + 1;
+    };
 
     if (comment_level > 0 || *s == '>') {
       s++;
@@ -118,7 +136,9 @@ Tokens lexer(const char *s) {
     if (isspace(*s)) {
       FLUSH_TOK(TOKEN_WORD);
       start = s + 1;
-    } else if ((isdigit(*s) || *s == '-') && start == s) {
+    } else if ((isdigit((unsigned char)*s)
+        || (*s == '-' && isdigit((unsigned char)s[1])))
+        && start == s) {
       EXHAUST(isdigit);
       FLUSH_TOK(TOKEN_NUMBER);
       continue;
@@ -128,7 +148,7 @@ Tokens lexer(const char *s) {
       FLUSH_TOK(TOKEN_DEFINITION);
       continue;
     } else if (*s == '"' && start == s) {
-      EXHAUST_NCHRS("\"");
+      EXHAUST_UNTIL("\"");
       start++;
       FLUSH_TOK(TOKEN_STRING);
       start++; // move past final quote
@@ -141,6 +161,11 @@ Tokens lexer(const char *s) {
 
   if (start < s) FLUSH_TOK(TOKEN_WORD);
 
-  return toks;
+  #undef FLUSH_TOK
+  #undef FLUSH_WITH_BRACK
+  #undef EXHAUST
+  #undef EXHAUST_UNTIL
+
+  return 0;
 }
 

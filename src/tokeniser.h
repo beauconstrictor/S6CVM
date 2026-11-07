@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include "errors.h"
+
 #define TOKEN_TYPES \
   X(NUMBER) \
   X(STRING) \
@@ -21,12 +23,12 @@ typedef enum {
 
 #undef X
 
-
 typedef struct {
   TokenKind kind;
   const char *start;
+  const char *path;
   size_t length;
-  int line;
+  Location location;
 } Token;
 
 typedef struct {
@@ -35,7 +37,8 @@ typedef struct {
   size_t capacity;
 } Tokens;
 
+Tokens create_tokens(void);
 const char *token_kind_name(TokenKind kind);
-Tokens lexer(const char *s);
+int lexer(const char *s, const char *path, Tokens *tokens, Error *error);
 
 #endif // TOKENISER_H
