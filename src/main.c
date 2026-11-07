@@ -56,8 +56,8 @@ char *read_file(const char *path) {
 }
 
 int main(void) {
-  char *file = read_file(program);
-  if (file == NULL) {
+  char *f = read_file(program);
+  if (f == NULL) {
     perror("s6cvm");
     return 1;
   }
@@ -65,7 +65,7 @@ int main(void) {
   Tokens toks = create_tokens();
   Error error = {0};
 
-  lexer(file, program, &toks, &error);
+  lexer(f, program, &toks, &error);
   check_error(&error);
 
   preprocessor(&toks, &error);
@@ -75,6 +75,8 @@ int main(void) {
     Token tok = toks.items[i];
     printf("%s %.*s\n", token_kind_name(tok.kind), (int)tok.length, tok.start);
   }
+
+  free(f);
 
   return 0;
 }
