@@ -37,6 +37,39 @@ bool append_token(Token tok, Tokens *tokens) {
   return true;
 }
 
+bool insert_token(Tokens *tokens, size_t index, Token tok) {
+  if (index > tokens->count)
+    return false;
+
+if (tokens->count == tokens->capacity) {
+    size_t new_capa = tokens->capacity ? tokens->capacity * 2 : 1;
+    Token *new = realloc(tokens->items, sizeof(Token) * new_capa);
+    if (!new) return false;
+
+    tokens->items = new;
+    tokens->capacity = new_capa;
+  }
+
+  memmove(&tokens->items[index + 1], &tokens->items[index],
+    (tokens->count - index) * sizeof(Token));
+
+  tokens->items[index] = tok;
+  tokens->count++;
+
+  return true;
+}
+
+bool remove_token(Tokens *tokens, size_t index) {
+  if (index >= tokens->count)
+    return false;
+
+  memmove(&tokens->items[index], &tokens->items[index + 1],
+    (tokens->count - index - 1) * sizeof(Token));
+
+  tokens->count--;
+  return true;
+}
+
 Tokens create_tokens(void) {
   return (Tokens) {
     .items = NULL,
@@ -182,6 +215,19 @@ int lexer(const char *s, const char *path, Tokens *toks, Error *error) {
     }
 
     s++;
+  }
+
+  if (comment_level) {
+    *error = (Error) {
+      .location = {
+        .line = line,
+        .col = s - linestart + 1,
+        .path = path,
+      },
+      .message = "unterminated comment",
+      .set = true,
+    };
+    return 1;
   }
 
   if (start < s) FLUSH_TOK(TOKEN_WORD);

@@ -102,10 +102,10 @@ pass 2: compilation
 > {:___inline_1 *___inline_0 print}
 > {:main 5 32 *___inline_1 if}
 
-> :1000 01 00 04 06 ;               negate
-> :1004 48 65 6c 6c 6f 31 ;         ___inline_0
-> :100a 12 10 04 10 PRINT ;         ___inline_1
-> :1010 01 05 01 20 12 10 0a IF ;   main
+> :0800 01 00 04 06 ;               negate
+> :0804 48 65 6c 6c 6f 31 ;         ___inline_0
+> :080a 12 08 04 10 PRINT ;         ___inline_1
+> :0810 01 05 01 20 12 08 0a IF ;   main
 
 this program doesn't actually make any sense, but it demonstrates
 the syntax reasonably well.
