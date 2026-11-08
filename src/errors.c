@@ -21,17 +21,31 @@ bool colour_allowed(void) {
   return true;
 }
 
-void print_error(const Error *error) {
-  bool colour = colour_allowed();
-  const char *red    = colour ? "\033[31m" : "";
-  const char *bold   = colour ? "\033[1m"  : "";
-  const char *yellow = colour ? "\033[33m" : "";
-  const char *dim    = colour ? "\033[2m"  : "";
-  const char *reset  = colour ? "\033[0m"  : "";
+typedef struct {
+    const char *red;
+    const char *bold;
+    const char *yellow;
+    const char *dim;
+    const char *reset;
+} Colours;
 
-  fprintf(stderr, "%s%s:%zu:%zu: %serror: %s%s\n", bold,
+Colours get_colours(void) {
+    bool colour = colour_allowed();
+    return (Colours) {
+        .red    = colour ? "\033[31m" : "",
+        .bold   = colour ? "\033[1m"  : "",
+        .yellow = colour ? "\033[33m" : "",
+        .dim    = colour ? "\033[2m"  : "",
+        .reset  = colour ? "\033[0m"  : "",
+    };
+}
+
+void print_error(const Error *error) {
+  Colours cols = get_colours();
+
+  fprintf(stderr, "%s%s:%zu:%zu: %serror: %s%s\n", cols.bold,
       error->location.path, error->location.line,
-      error->location.col, red, reset, error->message);
+      error->location.col, cols.red, cols.reset, error->message);
 
   FILE *f = fopen(error->location.path, "r");
 
@@ -54,12 +68,29 @@ void print_error(const Error *error) {
 
   // TODO: this looks fucked with tabs
 
-  fprintf(stderr, "%5zu %s|%s %s", error->location.line, dim, reset,
-      line);
-  fprintf(stderr, "%s%5s | %s", dim, "", reset);
+  fprintf(stderr, "%5zu %s|%s %s", error->location.line, cols.dim,
+      cols.reset, line);
+  fprintf(stderr, "%s%5s | %s", cols.dim, "", cols.reset);
   for (size_t i = 0; i < error->location.col-1; i++)
     fputc(' ', stderr);
-  fprintf(stderr, "%s^%s\n\n", yellow, reset);
+  fprintf(stderr, "%s^%s\n\n", cols.yellow, cols.reset);
 
   fclose(f);
 }
+
+void check_error(const Error *error) {
+  if (error->set) {
+    print_error(error);
+    exit(1);
+  }
+}
+
+void cli_error(const char *s, const char *binary) {
+  Colours cols = get_colours();
+
+  fprintf(stderr, "%ss6cvm: %s", cols.red, cols.reset);
+  fprintf(stderr, s, binary);
+  fprintf(stderr, "\n");
+  exit(1);
+}
+

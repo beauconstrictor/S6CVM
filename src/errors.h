@@ -1,6 +1,7 @@
 #ifndef ERRORS_H
 #define ERRORS_H
 
+#include <stdlib.h>
 #include <stdbool.h>
 
 typedef struct {
@@ -16,5 +17,7 @@ typedef struct {
 } Error;
 
 void print_error(const Error *error);
+void check_error(const Error *error);
+void cli_error(const char *s, const char *binary);
 
 #endif // ERRORS_H

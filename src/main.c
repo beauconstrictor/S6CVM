@@ -8,7 +8,7 @@
 #include "tokeniser.h"
 #include "preprocessor.h"
 
-#define USAGE "Usage: %s [OPTION]... FILE \n" \
+#define USAGE "Usage: %s [OPTION]... [MODE] FILE \n" \
               "Try passing '-h' for more information.\n"
 
 #define HELP "Usage: %s [OPTION]... FILE \n" \
@@ -17,7 +17,11 @@
              "Options:\n" \
              "\t-h  Show this message and exit\n" \
              "\t-v  Show version number and license information\n" \
+             "\n" \
+             "Modes:\n" \
+             "\t-l  Stop compilation after lexing\n" \
              "\t-p  Stop compilation after preprocessing\n" \
+             "\t-c  Fully compile program (default)\n"
 
 #define VERSION "%s (S6 Compact Virtual Machine) version 0.1.0\n" \
                 "Licensed under the FOSS MIT license.\n" \
@@ -25,17 +29,11 @@
                 "Written by Beau Constrictor; see\n" \
                 "<https://github.com/beauconstrictor/s6cvm>\n"
 
-void check_error(Error *error) {
-  if (error->set) {
-    print_error(error);
-    exit(1);
-  }
-}
-
-void cli_error(const char *s, const char *binary) {
-  fprintf(stderr, s, binary);
-  exit(1);
-}
+typedef enum {
+  MODE_COMPILE,
+  MODE_LEXER,
+  MODE_PREPROCESS
+} CompilationMode;
 
 char *read_file(const char *path) {
   FILE *file = fopen(path, "rb");
@@ -91,7 +89,9 @@ int main(int argc, char **argv) {
   int opt;
   char output[PATH_MAX] = "a.out";
 
-  while ((opt = getopt(argc, argv, "hvo:")) != -1) {
+  CompilationMode mode = MODE_COMPILE;
+
+  while ((opt = getopt(argc, argv, "hvoplc:")) != -1) {
     switch (opt) {
       case 'h': {
         show_help(argv[0]);
@@ -103,6 +103,15 @@ int main(int argc, char **argv) {
       } break;
       case 'o': {
         snprintf(output, sizeof(output), "%s", optarg);
+      } break;
+      case 'l': {
+        mode = MODE_LEXER;
+      } break;
+      case 'p': {
+        mode = MODE_PREPROCESS;
+      } break;
+      case 'c': {
+        mode = MODE_COMPILE;
       } break;
     }
   }
@@ -118,8 +127,13 @@ int main(int argc, char **argv) {
   Error error = {0};
 
   if (!lexer(source, filename, &toks, &error)) check_error(&error);
+  if (mode == MODE_LEXER) goto done;
   if (!preprocessor(&toks, &error)) check_error(&error);
+  if (mode == MODE_PREPROCESS) goto done;
 
+  cli_error("full compilation not supported yet.", argv[0]);
+
+done:
   delexer(&toks, stdout);
   printf("\n");
 
