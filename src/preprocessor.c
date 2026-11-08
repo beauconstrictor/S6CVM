@@ -10,6 +10,7 @@
 //      names like ___anon_0
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 
 #include "tokeniser.h"
