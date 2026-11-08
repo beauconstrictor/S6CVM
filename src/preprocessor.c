@@ -112,7 +112,7 @@ bool destringify(Tokens *toks, Error *error) {
         .start = "}",
         .length = 1,
         .location = tok.location,
-    });
+    } );
   }
 
   return true;
@@ -133,7 +133,7 @@ bool preprocessor(Tokens *toks, Error *error) {
 
   if (!deparenthesise(toks, error)) return false;
   if (!destringify(toks, error))    return false;
-  // if (!deanonymify(toks, error))    return false;
+  if (!deanonymify(toks, error))    return false;
 
   return true;
 }
