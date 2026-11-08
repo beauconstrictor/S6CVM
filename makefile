@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror -g
 DEPFLAGS = -MMD -MP
 TARGET = build/s6cvm
 
@@ -16,7 +16,7 @@ build/%.o: src/%.c | build
 	$(CC) $(CFLAGS) $(DEPFLAGS) -Isrc -c $< -o $@
 
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $@
+	$(CC) -g $(OBJS) -o $@
 
 .PHONY: clean
 clean:
@@ -25,6 +25,10 @@ clean:
 .PHONY: run
 run: $(TARGET)
 	$(TARGET)
+
+.PHONY: dbg
+dbg: $(TARGET)
+	gdb $(TARGET)
 
 DEPS = $(OBJS:.o=.d)
 -include $(DEPS)

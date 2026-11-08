@@ -68,10 +68,7 @@ int main(void) {
   if (!lexer(f, program, &toks, &error)) check_error(&error);
   if (!preprocessor(&toks, &error)) check_error(&error);
 
-  for (size_t i = 0; i < toks.count; i++) {
-    Token tok = toks.items[i];
-    printf("%s %.*s\n", token_kind_name(tok.kind), (int)tok.length, tok.start);
-  }
+  delexer(&toks, stdout);
 
   free(f);
 

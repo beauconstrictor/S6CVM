@@ -1,6 +1,7 @@
 #ifndef TOKENISER_H
 #define TOKENISER_H
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "errors.h"
@@ -46,5 +47,6 @@ bool remove_token(Tokens *tokens, size_t index);
 
 const char *token_kind_name(TokenKind kind);
 bool lexer(const char *s, const char *path, Tokens *tokens, Error *error);
+void delexer(Tokens *toks, FILE *f);
 
 #endif // TOKENISER_H

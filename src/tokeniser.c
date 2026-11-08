@@ -255,3 +255,66 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
   return true;
 }
 
+// currently, delex writes to a FILE*. this is to remove the need for
+// complex allocation, and suits all the needs i can think of. maybe
+// i will make a string version in the future
+void delexer(Tokens *toks, FILE *f) {
+  int nesting = 0;
+
+  for (size_t i = 0; i < toks->count; i++) {
+    Token tok = toks->items[i];
+
+    Token next;
+    bool has_next = i < toks->count-1;
+    if (has_next) {
+      next = toks->items[i+1];
+    }
+
+
+    #define PRINT_NESTING() \
+      do { \
+        for (int x = 0; x < nesting; x++) { \
+          fprintf(f, "  "); \
+        } \
+      } while (false)
+
+    switch (tok.kind) {
+      case TOKEN_DEFINITION: {
+      } break;
+
+      case TOKEN_BYTE: {
+        fprintf(f, "_%.*s ", (int)tok.length, tok.start);
+      } break;
+
+      case TOKEN_DEREF: {
+        fprintf(f, "*");
+      } break;
+
+      case TOKEN_STRING: {
+        fprintf(f, "\"%.*s\"", (int)tok.length, tok.start);
+      } break;
+
+      case TOKEN_LBRACE: {
+        nesting++;
+        fprintf(f, "{");
+
+        if (has_next && next.kind == TOKEN_DEFINITION)
+          fprintf(f, " :%.*s", (int)next.length, next.start);
+
+        fprintf(f, "\n");
+        PRINT_NESTING();
+      } break;
+
+      case TOKEN_RBRACE: {
+        fprintf(f, "\n");
+        nesting--;
+        PRINT_NESTING();
+        fprintf(f, "}");
+      } break;
+
+      default: {
+        fprintf(f, "%.*s ", (int)tok.length, tok.start);
+      } break;
+    }
+  }
+}

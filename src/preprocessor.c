@@ -128,9 +128,12 @@ bool deanonymify(Tokens *toks, Error *error) {
 }
 
 bool preprocessor(Tokens *toks, Error *error) {
+  (void)toks;
+  (void)error;
+
   if (!deparenthesise(toks, error)) return false;
   if (!destringify(toks, error))    return false;
-  if (!deanonymify(toks, error))    return false;
+  // if (!deanonymify(toks, error))    return false;
 
   return true;
 }
