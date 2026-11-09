@@ -10,12 +10,12 @@ Here is a sample of the programming language:
 
 ```
 {:fib <n : fib(n)>
-    (if-else (leq 1), {
-        num
-    }, {
+    (if (not (leq 1)), {
         (add (sub dup, 1) fib, (sub dup, 2) fib)
     })
 }
+
+{:main (num_out (fib 5))}
 ```
 
-This is a simple `.cvm` (the file extension used for this language's source code) subroutine that computes the n'th Fibonacci number.
+This is a simple `.cvm` (the file extension used for this language's source code) subroutine that computes the 5'th Fibonacci number.
