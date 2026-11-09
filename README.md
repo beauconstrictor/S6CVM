@@ -10,7 +10,7 @@ Here is a sample of the programming language:
 
 ```
 {:fib <n : fib(n)>
-    (if (not (leq 1)), {
+    (if (gt 1), {
         (add (sub dup, 1) fib, (sub dup, 2) fib)
     })
 }
