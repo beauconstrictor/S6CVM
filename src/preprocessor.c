@@ -159,7 +159,8 @@ bool lookup_symbol(const char *s, size_t length, struct Symbols *syms, long *val
   for (size_t i = 0; i < syms->count; i++) {
     struct Symbol sym = syms->items[i];
 
-    if (strncmp(s, sym.name, min(length, sym.length)) != 0) continue;
+    if (length != sym.length) continue;
+    if (strncmp(s, sym.name, length) != 0) continue;
 
     *value = sym.value;
     return true;
