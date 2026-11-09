@@ -1,9 +1,21 @@
 ## S6CVM
 
-S6CVM is Forth compiler designed to produce incredibly compact binaries for the [Ozpex S6](https://github.com/beauconstrictor/s6emu) platform.
+S6CVM is a development toolchain for the [Ozpex S6](https://github.com/beauconstrictor/s6emu) platform, which focuses on producing extremely small binaries. It achieves this by using a bytecode virtual machine, and a compiler that runs on a separate machine, targeting this VM.
 
-S6CVM is split into two main parts:
-- The compiler, which runs on a PC, and produces bytecode
-- The interpreter, which runs on the S6 and loads this bytecode from tape and then interprets it.
+S6CVM code is considerably slower than the other alternative toolchain for S6 development, [S6ASM](https://github.com/beauconstrictor/s6asm), which produces native code. However, it is impossible to write nontrivial programs in S6 assembly as a result of the inefficient instruction set and limited ROM size. S6CVM eschews this problem, by defining it's own instruction set that runs _on top_ of the S6.
 
-The name stands for 'Compact Virtual Machine'.
+which is written in S6 assembly. The virtual machine is resident in system ROM, and simply prompts you to insert a tape, containing a binary from the `s6cvm` compiler.
+
+Here is a sample of the programming language:
+
+```
+{:fib <n : fib(n)>
+    (if-else (leq 1) {
+        num}
+    {
+        (add (sub dup 1) fib (sub dup 2) fib)
+    })
+}
+```
+
+This is a simple `.cvm` (the file extension used for this language's source code) subroutine that computes the n'th Fibonacci number.
