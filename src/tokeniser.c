@@ -78,6 +78,10 @@ Tokens create_tokens(void) {
   };
 }
 
+bool isaspace(char c) {
+  return c == ',' || isspace((unsigned char)c);
+}
+
 bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
   const char *start = s;
   const char *linestart = s;
@@ -183,7 +187,7 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
       return false;
     }
   
-    if (isspace((unsigned char)*s)) {
+    if (isaspace(*s)) {
       FLUSH_TOK(TOKEN_WORD);
       start = s + 1;
     } else if ((isdigit((unsigned char)*s)
