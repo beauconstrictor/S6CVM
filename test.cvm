@@ -1,1 +1,6 @@
-{:negate <x : x -x> (sub 234 *over) "Hello, world!"}
+.sym X = 5
+
+<this is a nonsensical program that just checks the different
+ subsystems reasonably well>
+
+{:negate <x : x -x> (sub X *over) "Hello, world!"}

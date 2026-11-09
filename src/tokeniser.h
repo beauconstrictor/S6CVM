@@ -6,15 +6,19 @@
 
 #include "errors.h"
 
+#define CONST_WORD ".sym "
+
 #define TOKEN_TYPES \
+  X(DEFINITION) \
   X(NUMBER) \
   X(STRING) \
-  X(DEFINITION) \
-  X(LPARA) \
-  X(RPARA) \
   X(LBRACE) \
+  X(ASSIGN) \
   X(RBRACE) \
+  X(LPARA) \
   X(DEREF) \
+  X(CONST) \
+  X(RPARA) \
   X(WORD) \
   X(BYTE) \
 

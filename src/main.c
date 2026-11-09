@@ -17,6 +17,7 @@
              "Options:\n" \
              "\t-h  Show this message and exit\n" \
              "\t-v  Show version number and license information\n" \
+             "\t-t  Display IR as raw tokens\n" \
              "\n" \
              "Modes:\n" \
              "\t-l  Stop compilation after lexing\n" \
@@ -91,7 +92,9 @@ int main(int argc, char **argv) {
 
   CompilationMode mode = MODE_COMPILE;
 
-  while ((opt = getopt(argc, argv, "hvoplc:")) != -1) {
+  bool raw_tokens = false;
+
+  while ((opt = getopt(argc, argv, "hvotplc:")) != -1) {
     switch (opt) {
       case 'h': {
         show_help(argv[0]);
@@ -112,6 +115,9 @@ int main(int argc, char **argv) {
       } break;
       case 'c': {
         mode = MODE_COMPILE;
+      } break;
+      case 't': {
+        raw_tokens = true;
       } break;
     }
   }
@@ -134,8 +140,17 @@ int main(int argc, char **argv) {
   cli_error("full compilation not supported yet.", argv[0]);
 
 done:
-  delexer(&toks, stdout);
-  printf("\n");
+
+
+  if (raw_tokens) {
+    for (size_t i = 0; i < toks.count; i++) {
+      Token tok = toks.items[i];
+      printf("%s %.*s\n", token_kind_name(tok.kind), (int)tok.length, tok.start);
+    }
+  } else {
+    delexer(&toks, stdout);
+    printf("\n");
+  }
 
   return 0;
 }

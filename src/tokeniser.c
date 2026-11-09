@@ -163,6 +163,7 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
 
     if (*s == '{') FLUSH_WITH_BRACK(LBRACE);
     if (*s == '}') FLUSH_WITH_BRACK(RBRACE);
+    if (*s == '=') FLUSH_WITH_BRACK(ASSIGN);
     if (*s == '(') FLUSH_WITH_BRACK(LPARA);
     if (*s == ')') FLUSH_WITH_BRACK(RPARA);
     if (*s == '*') FLUSH_WITH_BRACK(DEREF);
@@ -181,6 +182,7 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
       };
       return false;
     }
+  
     if (isspace((unsigned char)*s)) {
       FLUSH_TOK(TOKEN_WORD);
       start = s + 1;
@@ -226,6 +228,12 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
       FLUSH_TOK(TOKEN_STRING);
       start++; // move past final quote
       s++;
+      continue;
+    }
+
+    if (strncmp(s, CONST_WORD, sizeof(CONST_WORD)-1) == 0) {
+      s += sizeof(CONST_WORD)-2;
+      FLUSH_TOK(TOKEN_CONST);
       continue;
     }
 
