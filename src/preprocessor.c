@@ -178,15 +178,9 @@ bool desymbolise(Tokens *toks, Error *error) {
     Token tok = toks->items[i];
     if (tok.kind != TOKEN_CONST) continue;
 
-    bool has_assignment = true;
-
-    if (toks->count < i + 4) has_assignment = false;
-    if (toks->items[i+1].kind != TOKEN_WORD) has_assignment = false;
-    if (toks->items[i+2].kind != TOKEN_ASSIGN) has_assignment = false;
-    // TODO: you can't currently assign in terms of OTHER symbols
-    if (toks->items[i+3].kind != TOKEN_NUMBER) has_assignment = false;
-
-    if (!has_assignment) {
+    if (toks->count < i + 4 || toks->items[i+1].kind != TOKEN_WORD
+      || toks->items[i+2].kind != TOKEN_ASSIGN
+      || toks->items[i+3].kind != TOKEN_NUMBER) {
       *error = (Error) {
         .location = tok.location,
         .message = "expected assignment after " CONST_WORD,
