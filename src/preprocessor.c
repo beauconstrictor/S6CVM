@@ -176,50 +176,52 @@ bool desymbolise(Tokens *toks, Error *error) {
 
   for (size_t i = 0; i < toks->count; i++) {
     Token tok = toks->items[i];
-    if (tok.kind != TOKEN_CONST) continue;
 
-    if (toks->count < i + 4 || toks->items[i+1].kind != TOKEN_WORD
-      || toks->items[i+2].kind != TOKEN_ASSIGN
-      || toks->items[i+3].kind != TOKEN_NUMBER) {
-      *error = (Error) {
-        .location = tok.location,
-        .message = "expected assignment after " CONST_WORD,
-        .set = true,
+    if (tok.kind == TOKEN_CONST) {
+      if (toks->count < i + 4 || toks->items[i+1].kind != TOKEN_WORD
+        || toks->items[i+2].kind != TOKEN_ASSIGN
+        || toks->items[i+3].kind != TOKEN_NUMBER) {
+        *error = (Error) {
+          .location = tok.location,
+          .message = "expected assignment after " CONST_WORD,
+          .set = true,
+        };
+        return false;
+      }
+
+      Token lval  = toks->items[i+1];
+      Token rval = toks->items[i+3];
+
+      snprintf(buf, sizeof(buf), "%.*s", (int)rval.length, rval.start);
+      char *end;
+      long value = strtol(rval.start, &end, 10);
+
+      if (end != rval.start + rval.length) {
+        *error = (Error) {
+          .location = rval.location,
+          .message = "expected a number after assignment" CONST_WORD,
+          .set = true,
+        };
+        return false;
+      }
+
+      struct Symbol sym = (struct Symbol) {
+        .name   = lval.start,
+        .length = lval.length,
+        .value  = value,
       };
-      return false;
+
+      // we have to make sure to delete them _after_ any errors.
+      // otherwise their locations won't exist anymore to print them.
+      remove_token(toks, i);
+      remove_token(toks, i);
+      remove_token(toks, i);
+      remove_token(toks, i);
+      i -= 4;
+
+      append_symbol(sym, &syms);
+    } else if (tok.kind == TOKEN_VAR) {
     }
-
-    Token lval  = toks->items[i+1];
-    Token rval = toks->items[i+3];
-
-    snprintf(buf, sizeof(buf), "%.*s", (int)rval.length, rval.start);
-    char *end;
-    long value = strtol(rval.start, &end, 10);
-
-    if (end != rval.start + rval.length) {
-      *error = (Error) {
-        .location = rval.location,
-        .message = "expected a number after assignment" CONST_WORD,
-        .set = true,
-      };
-      return false;
-    }
-
-    struct Symbol sym = (struct Symbol) {
-      .name   = lval.start,
-      .length = lval.length,
-      .value  = value,
-    };
-
-    // we have to make sure to delete them _after_ any errors.
-    // otherwise their locations won't exist anymore to print them.
-    remove_token(toks, i);
-    remove_token(toks, i);
-    remove_token(toks, i);
-    remove_token(toks, i);
-    i -= 4;
-
-    append_symbol(sym, &syms);
   }
 
   // TODO: right here, sort symbols lexicographically so we can do a
@@ -239,7 +241,7 @@ bool desymbolise(Tokens *toks, Error *error) {
     snprintf(s, len + 1, "%ld", value);
 
     remove_token(toks, i);
-    insert_token(toks, i-1, (Token) {
+    insert_token(toks, i, (Token) {
         .kind = TOKEN_NUMBER,
         .start = s,
         .length = len,

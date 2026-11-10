@@ -136,6 +136,7 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
       if (strncmp(s, name " ", sizeof(name)) == 0) { \
         s += sizeof(name); \
         FLUSH_TOK(kind); \
+        toks->items[toks->count-1].length -= 1; /* remove the space */ \
         continue; \
       } \
     } while (false)
@@ -281,6 +282,7 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
 // i will make a string version in the future
 void delexer(Tokens *toks, FILE *f) {
   int nesting = 0;
+  bool assignment = false;
 
   for (size_t i = 0; i < toks->count; i++) {
     Token tok = toks->items[i];
@@ -290,7 +292,6 @@ void delexer(Tokens *toks, FILE *f) {
     if (has_next) {
       next = toks->items[i+1];
     }
-
 
     #define PRINT_NESTING() \
       do { \
@@ -305,6 +306,11 @@ void delexer(Tokens *toks, FILE *f) {
 
       case TOKEN_BYTE: {
         fprintf(f, "_%.*s ", (int)tok.length, tok.start);
+      } break;
+
+      case TOKEN_ASSIGN: {
+        fprintf(f, "= ");
+        assignment = true;
       } break;
 
       case TOKEN_DEREF: {
@@ -336,6 +342,11 @@ void delexer(Tokens *toks, FILE *f) {
       default: {
         fprintf(f, "%.*s ", (int)tok.length, tok.start);
       } break;
+    }
+
+    if (assignment && tok.kind != TOKEN_ASSIGN) {
+      fprintf(f, "\n");
+      assignment = false;
     }
   }
 }

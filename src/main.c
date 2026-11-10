@@ -140,8 +140,6 @@ int main(int argc, char **argv) {
   cli_error("full compilation not supported yet.", argv[0]);
 
 done:
-
-
   if (raw_tokens) {
     for (size_t i = 0; i < toks.count; i++) {
       Token tok = toks.items[i];
