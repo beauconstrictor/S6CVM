@@ -204,7 +204,9 @@ bool desymbolise(Tokens *toks, Error *error) {
 
   size_t allocator = ALLOC_START;
 
-  for (size_t i = 0; i < toks->count; i++) {
+  size_t i = 0;
+
+  while (i < toks->count) {
     Token tok = toks->items[i];
 
     if (tok.kind == TOKEN_CONST) {
@@ -226,16 +228,17 @@ bool desymbolise(Tokens *toks, Error *error) {
       long value = read_number(&rval, error);
       if (error->set) return false;
 
-      append_token_symbol(&syms, &lval, value);
+      if (!append_token_symbol(&syms, &lval, value)) return false;
 
       // we have to make sure to delete them _after_ any errors.
       // otherwise their locations won't exist anymore to print them.
       for (int x = 0; x < 4; x++)
         remove_token(toks, i);
-      i -= 4;
+
+      continue;
 
     } else if (tok.kind == TOKEN_VAR) {
-      if (toks->count < i + 4
+      if (toks->count < i + 5
         || toks->items[i+1].kind != TOKEN_WORD
         || toks->items[i+2].kind != TOKEN_LSQUARE
         || toks->items[i+3].kind != TOKEN_NUMBER
@@ -263,13 +266,16 @@ bool desymbolise(Tokens *toks, Error *error) {
         return false;
       }
 
+      if (!append_token_symbol(&syms, &lval, allocator)) return false;
+      allocator += size;
+
       for (int x = 0; x < 5; x++)
         remove_token(toks, i);
-      i -= 5;
-  
-      append_token_symbol(&syms, &lval, allocator);
-      allocator += size;
+ 
+      continue;
     }
+
+    i++;
   }
 
   // TODO: right here, sort symbols lexicographically so we can do a
