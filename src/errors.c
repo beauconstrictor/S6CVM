@@ -81,10 +81,10 @@ void print_error(const Error *error) {
 void check_error(const Error *error) {
   if (error->set) {
     print_error(error);
-    exit(1);
   } else {
     perror("s6cvm");
   }
+  exit(1);
 }
 
 void cli_error(const char *s, const char *binary) {
