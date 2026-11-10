@@ -183,7 +183,7 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
     if (*s == ')') FLUSH_WITH_BRACK(RPARA);
 
     if (*s == '=') FLUSH_WITH_BRACK(ASSIGN);
-    if (*s == '*') FLUSH_WITH_BRACK(DEREF);
+    if (*s == '&') FLUSH_WITH_BRACK(ADDR);
 
     if (*s == '\t') {
       // TODO: also ban tabs in strings, forcing \t instead (but
@@ -313,8 +313,12 @@ void delexer(Tokens *toks, FILE *f) {
         assignment = true;
       } break;
 
-      case TOKEN_DEREF: {
-        fprintf(f, "*");
+      case TOKEN_ADDR: {
+        fprintf(f, "&");
+      } break;
+
+      case TOKEN_RSQUARE: {
+        fprintf(f, "]\n");
       } break;
 
       case TOKEN_STRING: {
@@ -326,7 +330,7 @@ void delexer(Tokens *toks, FILE *f) {
         fprintf(f, "{");
 
         if (has_next && next.kind == TOKEN_DEFINITION)
-          fprintf(f, " :%.*s", (int)next.length, next.start);
+          fprintf(f, ":%.*s", (int)next.length, next.start);
 
         fprintf(f, "\n");
         PRINT_NESTING();
@@ -336,7 +340,7 @@ void delexer(Tokens *toks, FILE *f) {
         fprintf(f, "\n");
         nesting--;
         PRINT_NESTING();
-        fprintf(f, "}");
+        fprintf(f, "} ");
       } break;
 
       default: {

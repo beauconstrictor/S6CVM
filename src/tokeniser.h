@@ -19,10 +19,10 @@
   X(ASSIGN) \
   X(RBRACE) \
   X(LPARA) \
-  X(DEREF) \
   X(CONST) \
   X(RPARA) \
   X(WORD) \
+  X(ADDR) \
   X(BYTE) \
   X(VAR) \
 

@@ -158,13 +158,12 @@ bool append_symbol(struct Symbol sym, struct Symbols *syms) {
   return true;
 }
 
-bool append_token_symbol(struct Symbols *syms, Token *tok) {
-  struct Symbol sym = (struct Symbol) {
-    .name   = lval.start,
-    .length = lval.length,
+bool append_token_symbol(struct Symbols *syms, Token *tok, long value) {
+  return append_symbol((struct Symbol) {
+    .name   = tok->start,
+    .length = tok->length,
     .value  = value,
-  };
-
+  }, syms);
 }
 
 bool lookup_symbol(const char *s, size_t length, struct Symbols *syms, long *value) {
@@ -227,14 +226,12 @@ bool desymbolise(Tokens *toks, Error *error) {
       long value = read_number(&rval, error);
       if (error->set) return false;
 
-      append_token_symbol(&syms, &lval);
+      append_token_symbol(&syms, &lval, value);
 
       // we have to make sure to delete them _after_ any errors.
       // otherwise their locations won't exist anymore to print them.
-      remove_token(toks, i);
-      remove_token(toks, i);
-      remove_token(toks, i);
-      remove_token(toks, i);
+      for (int x = 0; x < 4; x++)
+        remove_token(toks, i);
       i -= 4;
 
     } else if (tok.kind == TOKEN_VAR) {
@@ -254,18 +251,24 @@ bool desymbolise(Tokens *toks, Error *error) {
       Token lval = toks->items[i+1];
       Token rval = toks->items[i+3];
 
-      long value = read_number(&rval, error);
+      long size = read_number(&rval, error);
       if (error->set) return false;
 
-      // we have to make sure to delete them _after_ any errors.
-      // otherwise their locations won't exist anymore to print them.
-      remove_token(toks, i);
-      remove_token(toks, i);
-      remove_token(toks, i);
-      remove_token(toks, i);
-      remove_token(toks, i);
-      i -= 5;
+      if (allocator + size > ALLOC_MAX) {
+        *error = (Error) {
+          .location = tok.location,
+          .message = "insufficient memory for variable allocation" VAR_WORD,
+          .set = true,
+        };
+        return false;
+      }
 
+      for (int x = 0; x < 5; x++)
+        remove_token(toks, i);
+      i -= 5;
+  
+      append_token_symbol(&syms, &lval, allocator);
+      allocator += size;
     }
   }
 
