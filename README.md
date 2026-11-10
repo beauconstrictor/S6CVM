@@ -11,7 +11,8 @@ Here is a sample of the programming language:
 ```
 {:fib <n : fib(n)>
     (if (gt 1), {
-        (add (sub dup, 1) fib, (sub dup, 2) fib)
+        (add (fib (sub dup, 1)), (fib (sub over, 2))
+        (drop swap)
     })
 }
 

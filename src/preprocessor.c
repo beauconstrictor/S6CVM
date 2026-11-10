@@ -20,6 +20,9 @@
 #include "tokeniser.h"
 #include "errors.h"
 
+#define ALLOC_START 0x38b0
+#define ALLOC_MAX   0x6fff
+
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
 bool deparenthesise(Tokens *toks, Error *error) {
@@ -155,6 +158,15 @@ bool append_symbol(struct Symbol sym, struct Symbols *syms) {
   return true;
 }
 
+bool append_token_symbol(struct Symbols *syms, Token *tok) {
+  struct Symbol sym = (struct Symbol) {
+    .name   = lval.start,
+    .length = lval.length,
+    .value  = value,
+  };
+
+}
+
 bool lookup_symbol(const char *s, size_t length, struct Symbols *syms, long *value) {
   for (size_t i = 0; i < syms->count; i++) {
     struct Symbol sym = syms->items[i];
@@ -169,16 +181,36 @@ bool lookup_symbol(const char *s, size_t length, struct Symbols *syms, long *val
   return false;
 }
 
+long read_number(const Token *tok, Error *error) {
+  char buf[256];
+
+  snprintf(buf, sizeof(buf), "%.*s", (int)tok->length, tok->start);
+  char *end;
+  long value = strtol(tok->start, &end, 10);
+
+  if (end != tok->start + tok->length) {
+    *error = (Error) {
+      .location = tok->location,
+      .message = "expected a number",
+      .set = true,
+    };
+    return -1;
+  }
+  
+  return value;
+}
+
 bool desymbolise(Tokens *toks, Error *error) {
   struct Symbols syms = {0};
 
-  char buf[256];
+  size_t allocator = ALLOC_START;
 
   for (size_t i = 0; i < toks->count; i++) {
     Token tok = toks->items[i];
 
     if (tok.kind == TOKEN_CONST) {
-      if (toks->count < i + 4 || toks->items[i+1].kind != TOKEN_WORD
+      if (toks->count < i + 4
+        || toks->items[i+1].kind != TOKEN_WORD
         || toks->items[i+2].kind != TOKEN_ASSIGN
         || toks->items[i+3].kind != TOKEN_NUMBER) {
         *error = (Error) {
@@ -192,24 +224,10 @@ bool desymbolise(Tokens *toks, Error *error) {
       Token lval  = toks->items[i+1];
       Token rval = toks->items[i+3];
 
-      snprintf(buf, sizeof(buf), "%.*s", (int)rval.length, rval.start);
-      char *end;
-      long value = strtol(rval.start, &end, 10);
+      long value = read_number(&rval, error);
+      if (error->set) return false;
 
-      if (end != rval.start + rval.length) {
-        *error = (Error) {
-          .location = rval.location,
-          .message = "expected a number after assignment" CONST_WORD,
-          .set = true,
-        };
-        return false;
-      }
-
-      struct Symbol sym = (struct Symbol) {
-        .name   = lval.start,
-        .length = lval.length,
-        .value  = value,
-      };
+      append_token_symbol(&syms, &lval);
 
       // we have to make sure to delete them _after_ any errors.
       // otherwise their locations won't exist anymore to print them.
@@ -219,8 +237,35 @@ bool desymbolise(Tokens *toks, Error *error) {
       remove_token(toks, i);
       i -= 4;
 
-      append_symbol(sym, &syms);
     } else if (tok.kind == TOKEN_VAR) {
+      if (toks->count < i + 4
+        || toks->items[i+1].kind != TOKEN_WORD
+        || toks->items[i+2].kind != TOKEN_LSQUARE
+        || toks->items[i+3].kind != TOKEN_NUMBER
+        || toks->items[i+4].kind != TOKEN_RSQUARE) {
+        *error = (Error) {
+          .location = tok.location,
+          .message = "expected declaration after " VAR_WORD,
+          .set = true,
+        };
+        return false;
+      }
+
+      Token lval = toks->items[i+1];
+      Token rval = toks->items[i+3];
+
+      long value = read_number(&rval, error);
+      if (error->set) return false;
+
+      // we have to make sure to delete them _after_ any errors.
+      // otherwise their locations won't exist anymore to print them.
+      remove_token(toks, i);
+      remove_token(toks, i);
+      remove_token(toks, i);
+      remove_token(toks, i);
+      remove_token(toks, i);
+      i -= 5;
+
     }
   }
 
