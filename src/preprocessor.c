@@ -23,8 +23,7 @@
 
 #define ALLOC_START 0x38b0
 #define ALLOC_MAX   0x6fff
-
-#define min(a, b) ((a) < (b) ? (a) : (b))
+#define ANON_PREFIX "___anon_"
 
 bool deparenthesise(Tokens *toks, Error *error) {
   Tokens prefix_words = create_tokens();
@@ -316,13 +315,157 @@ bool desymbolise(Tokens *toks, Error *error) {
   return true;
 }
 
+struct Blocks {
+  Tokens *items;
+  size_t count;
+  size_t capacity;
+};
+
+// TODO: maybe move all these dynamic arrays into a macro?
+bool append_block(Tokens block, struct Blocks *blocks) {
+  if (blocks->count < blocks->capacity) {
+    blocks->items[blocks->count++] = block;
+    return true;
+  }
+
+  size_t new_capa = blocks->capacity;
+  new_capa = new_capa > 0 ? new_capa*2 : 1;
+  Tokens *new = realloc(blocks->items, sizeof(Tokens) * new_capa);
+  if (new == NULL) return false;
+
+  blocks->items = new;
+  blocks->capacity = new_capa;
+  blocks->items[blocks->count++] = block;
+
+  return true;
+}
+
+static bool deanonymify_inner(Tokens *toks, struct Blocks *blocks,
+    size_t *anon_count, Error *error) {
+  size_t i = 0;
+
+  while (i < toks->count) {
+    if (toks->items[i].kind != TOKEN_LBRACE) {
+      i++;
+      continue;
+    }
+
+    Token opening = toks->items[i];
+
+    size_t depth = 1;
+    size_t end = i + 1;
+
+    while (end < toks->count && depth > 0) {
+      if (toks->items[end].kind == TOKEN_LBRACE)
+        depth++;
+      else if (toks->items[end].kind == TOKEN_RBRACE)
+        depth--;
+
+      end++;
+    }
+
+    if (depth != 0) {
+      *error = (Error) {
+        .location = opening.location,
+        .message = "unterminated block",
+        .set = true,
+      };
+      return false;
+    }
+
+    Tokens block = create_tokens();
+
+    for (size_t x = i + 1; x < end - 1; x++) {
+      if (!append_token(toks->items[x], &block)) return false;
+    }
+
+    if (!deanonymify_inner(&block, blocks, anon_count, error))
+      return false;
+
+    bool named =
+      block.count > 0 &&
+      block.items[0].kind == TOKEN_DEFINITION;
+
+    if (named) {
+      for (size_t x = i + 1; x < end - 1; x++)
+        remove_token(toks, i + 1);
+
+      for (size_t x = 0; x < block.count; x++)
+        insert_token(toks, i + 1 + x, block.items[x]);
+
+      i += block.count + 2;
+      continue;
+    }
+
+    int len = snprintf(
+      NULL, 0, ANON_PREFIX "%zu", (*anon_count)
+    );
+
+    char *name = malloc(len + 1);
+    if (name == NULL)
+      return false;
+
+    snprintf(name, len + 1, ANON_PREFIX "%zu", (*anon_count)++);
+    if (!append_block(block, blocks))
+      return false;
+
+    for (size_t x = i; x < end; x++)
+      remove_token(toks, i);
+
+    insert_token(toks, i, (Token) {
+      .kind = TOKEN_WORD,
+      .start = name,
+      .length = len,
+      .location = opening.location,
+    });
+
+    i++;
+  }
+
+  return true;
+}
+
 bool deanonymify(Tokens *toks, Error *error) {
-  (void) toks;
-  (void) error;
+  struct Blocks blocks = {0};
+  size_t anon_count = 0;
 
-  // TODO!
+  if (!deanonymify_inner(toks, &blocks, &anon_count, error))
+    return false;
 
-  return false;
+  // add back the anonymous blocks the the end of the main
+  // token stream
+  for (size_t i = 0; i < blocks.count; i++) {
+    int len = snprintf(NULL, 0, ANON_PREFIX "%zu", i);
+
+    char *name = malloc(len + 1);
+    if (name == NULL)
+      return false;
+
+    snprintf(name, len + 1, ANON_PREFIX "%zu", i);
+
+    append_token((Token) {
+      .kind = TOKEN_LBRACE,
+      .start = "{",
+      .length = 1,
+    }, toks);
+
+    append_token((Token) {
+      .kind = TOKEN_DEFINITION,
+      .start = name,
+      .length = len,
+    }, toks);
+
+    for (size_t j = 0; j < blocks.items[i].count; j++)
+      append_token(blocks.items[i].items[j], toks);
+
+    append_token((Token) {
+      .kind = TOKEN_RBRACE,
+      .start = "}",
+      .length = 1,
+    }, toks);
+  }
+
+  return true;
 }
 
 bool preprocessor(Tokens *toks, Error *error) {
@@ -331,8 +474,6 @@ bool preprocessor(Tokens *toks, Error *error) {
 
   if (!deparenthesise(toks, error)) return false;
   if (!destringify(toks, error))    return false;
-  delexer(toks, stdout);
-  printf("\n\n--\n\n");
   if (!desymbolise(toks, error))    return false;
   if (!deanonymify(toks, error))    return false;
 

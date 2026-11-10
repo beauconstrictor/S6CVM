@@ -99,18 +99,15 @@ pass 2: compilation
   bytes), as well as inline calls (exactly what we need). that means
   the compiled version of our above program might look like this:
 
+> {:negate 0 over sub}
+> {:___inline_0 _72 _101 _108 _108 _111 _33}
+> {:___inline_1 *___inline_0 print}
+> {:main 5 32 *___inline_1 if}
 
-```
- {:negate 0 over sub}
- {:___inline_0 _72 _101 _108 _108 _111 _33}
- {:___inline_1 *___inline_0 print}
- {:main 5 32 *___inline_1 if}
-
- :0800 01 00 04 06 ;               negate
- :0804 48 65 6c 6c 6f 20 ;         ___inline_0
- :080a 12 08 04 10 PRINT ;         ___inline_1
- :0810 01 05 01 20 12 08 0a IF ;   main
-```
+> :0800 01 00 04 06 ;               negate
+> :0804 48 65 6c 6c 6f 20 ;         ___inline_0
+> :080a 12 08 04 10 PRINT ;         ___inline_1
+> :0810 01 05 01 20 12 08 0a IF ;   main
 
 this program doesn't actually make any sense, but it demonstrates
 the syntax reasonably well.
