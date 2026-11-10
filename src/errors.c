@@ -82,6 +82,8 @@ void check_error(const Error *error) {
   if (error->set) {
     print_error(error);
     exit(1);
+  } else {
+    perror("s6cvm");
   }
 }
 

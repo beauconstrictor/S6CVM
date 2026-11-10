@@ -11,12 +11,12 @@ Here is a sample of the programming language:
 ```
 {:fib <n : fib(n)>
     (if (gt 1), {
-        (add (fib (sub dup, 1)), (fib (sub over, 2))
+        (add (fib (sub dup, 1)), (fib (sub over, 2)))
         (drop swap)
     })
 }
 
-{:main (num_out (fib 5))}
+{:main (puti (fib 5))}
 ```
 
 This is a simple `.cvm` (the file extension used for this language's source code) subroutine that computes the 5'th Fibonacci number.
