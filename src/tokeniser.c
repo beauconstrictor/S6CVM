@@ -131,6 +131,15 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
       while (!strchr(chrs, *++s)) {} \
     } while (false)
 
+  #define SPECIAL_WORD(name, kind) \
+    do { \
+      if (strncmp(s, name " ", sizeof(name)) == 0) { \
+        s += sizeof(name); \
+        FLUSH_TOK(kind); \
+        continue; \
+      } \
+    } while (false)
+
   int comment_level = 0;
 
   while (*s) {
@@ -165,16 +174,19 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
       continue;
     };
 
+    if (*s == '[') FLUSH_WITH_BRACK(LSQUARE);
+    if (*s == ']') FLUSH_WITH_BRACK(RSQUARE);
     if (*s == '{') FLUSH_WITH_BRACK(LBRACE);
     if (*s == '}') FLUSH_WITH_BRACK(RBRACE);
-    if (*s == '=') FLUSH_WITH_BRACK(ASSIGN);
     if (*s == '(') FLUSH_WITH_BRACK(LPARA);
     if (*s == ')') FLUSH_WITH_BRACK(RPARA);
+
+    if (*s == '=') FLUSH_WITH_BRACK(ASSIGN);
     if (*s == '*') FLUSH_WITH_BRACK(DEREF);
 
     if (*s == '\t') {
-      // TODO: also ban tabs in strings, using \t instead (but
-      //       esapes aren't supported at all yet
+      // TODO: also ban tabs in strings, forcing \t instead (but
+      //       esapes aren't supported at all yet, so this isn't done
       *error = (Error) {
         .location = {
           .line = line,
@@ -235,11 +247,8 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
       continue;
     }
 
-    if (strncmp(s, CONST_WORD, sizeof(CONST_WORD)-1) == 0) {
-      s += sizeof(CONST_WORD)-2;
-      FLUSH_TOK(TOKEN_CONST);
-      continue;
-    }
+    SPECIAL_WORD(CONST_WORD, TOKEN_CONST);
+    SPECIAL_WORD(VAR_WORD, TOKEN_VAR);
 
     s++;
   }

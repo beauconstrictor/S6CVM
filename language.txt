@@ -111,3 +111,12 @@ pass 2: compilation
 
 this program doesn't actually make any sense, but it demonstrates
 the syntax reasonably well.
+
+memory map:
+
+  0000-07ff  reserved memory (data stack)     2K
+  0800-3b7f  program code                    13K
+  3b80-6fff  program data                    13K
+  7000-7fff  reserved memory (return stack)   4K
+  8000-fffd  reserved memory (system rom)    32K
+  fffe-ffff  mmi/o                             2

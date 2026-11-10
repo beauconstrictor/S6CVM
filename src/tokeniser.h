@@ -6,10 +6,13 @@
 
 #include "errors.h"
 
-#define CONST_WORD ".sym "
+#define CONST_WORD "const"
+#define VAR_WORD "var"
 
 #define TOKEN_TYPES \
   X(DEFINITION) \
+  X(LSQUARE) \
+  X(RSQUARE) \
   X(NUMBER) \
   X(STRING) \
   X(LBRACE) \
@@ -21,6 +24,7 @@
   X(RPARA) \
   X(WORD) \
   X(BYTE) \
+  X(VAR) \
 
 #define X(name) TOKEN_##name,
 

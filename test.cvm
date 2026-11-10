@@ -1,6 +1,4 @@
-.sym X = 5
+const table = 5
+var variable[2]
 
-<this is a nonsensical program that just checks the different
- subsystems reasonably well>
-
-{:negate <x : x -x> (sub X *over) "Hello, world!"}
+{:times-table (mul table)}
