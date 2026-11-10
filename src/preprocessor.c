@@ -12,6 +12,7 @@
 //   -> move anonymous blocks to global named blocks, with internal
 //      names like ___anon_0
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -191,6 +192,15 @@ long read_number(const Token *tok, Error *error) {
     *error = (Error) {
       .location = tok->location,
       .message = "expected a number",
+      .set = true,
+    };
+    return -1;
+  }
+
+  if (errno == ERANGE) {
+    *error = (Error) {
+      .location = tok->location,
+      .message = "number out of range",
       .set = true,
     };
     return -1;
