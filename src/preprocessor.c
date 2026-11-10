@@ -187,7 +187,7 @@ long read_number(const Token *tok, Error *error) {
   char *end;
   long value = strtol(buf, &end, 10);
 
-  if (end != tok->start + tok->length) {
+  if (end != buf + tok->length) {
     *error = (Error) {
       .location = tok->location,
       .message = "expected a number",
