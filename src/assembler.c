@@ -214,7 +214,7 @@ bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
 
       case TOKEN_WORD: {
         long addr;
-        if (!lookup_symbol(next.start, next.length, syms, &addr))
+        if (!lookup_symbol(tok.start, tok.length, syms, &addr))
           GIVE_ERROR_WITH_LEXEME("undefined symbol: '%.*s'", tok);
         if (error->set) return false;
         EMIT_BYTE(OPCODE_PUSH);
