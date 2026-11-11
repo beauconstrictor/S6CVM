@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#include "parser.h"
 #include "tokeniser.h"
+#include "assembler.h"
 #include "preprocessor.h"
 
 #define USAGE "Usage: %s [OPTION]... [MODE] FILE \n" \
@@ -17,12 +19,16 @@
              "Options:\n" \
              "\t-h  Show this message and exit\n" \
              "\t-v  Show version number and license information\n" \
-             "\t-t  Display IR as raw tokens\n" \
+             "\t-t  Format IR as raw tokens\n" \
+             "\t-s  File to write a table of function addresses to\n" \
+             "\t-o  File to write binary or IR to\n" \
              "\n" \
              "Modes:\n" \
              "\t-l  Stop compilation after lexing\n" \
              "\t-p  Stop compilation after preprocessing\n" \
-             "\t-c  Fully compile program (default)\n"
+             "\t-c  Fully compile program (default)\n" \
+             "\n" \
+             "Use '-' in place of paths to use the standard output.\n" \
 
 #define VERSION "%s (S6 Compact Virtual Machine) version 0.1.0\n" \
                 "Licensed under the FOSS MIT license.\n" \
@@ -86,15 +92,59 @@ void show_version(const char *binary) {
   printf(VERSION, binary);
 }
 
+void show_ir(Tokens *toks, CompilationMode mode, bool raw_tokens,
+    bool dump_syms, const char *binary) {
+  if (raw_tokens) {
+    for (size_t i = 0; i < toks->count; i++) {
+      Token tok = toks->items[i];
+      printf("%s %.*s\n", token_kind_name(tok.kind), (int)tok.length, tok.start);
+    }
+
+  } else if (dump_syms) {
+    if (mode == MODE_LEXER)
+      cli_error("cannot generate a symbol table in lexing mode", binary);
+    if (mode == MODE_PREPROCESS)
+      cli_error("cannot generate a symbol table in preprocessing mode", binary);
+
+  } else {
+    delexer(toks, stdout);
+    printf("\n");
+  }
+}
+
+FILE *get_handle(const char *path, const char *binary, bool binmode) {
+  if (strcmp(path, "-") == 0) return stdout;
+
+  FILE *handle = fopen(path, binmode ? "wb" : "w");
+  if (handle == NULL) {
+    char buf[PATH_MAX];
+    snprintf(buf, sizeof(buf), "%s: %s", binary, path);
+    perror(buf);
+    exit(1);
+  }
+  return handle;
+}
+
+void dump_symbols(Symbols *syms, FILE *f) {
+  for (size_t i = 0; i < syms->count; i++) {
+    Symbol sym = syms->items[i];
+    if (strncmp(sym.name, ANON_PREFIX, sizeof(ANON_PREFIX)-1) == 0)
+      continue;
+    fprintf(f, "%.*s\t%ld\n", (int)sym.length, sym.name, sym.value);
+  }
+}
+
 int main(int argc, char **argv) {
   int opt;
   char output[PATH_MAX] = "a.out";
+  char symtable[PATH_MAX];
 
   CompilationMode mode = MODE_COMPILE;
 
   bool raw_tokens = false;
+  bool dump_syms  = false;
 
-  while ((opt = getopt(argc, argv, "hvotplc:")) != -1) {
+  while ((opt = getopt(argc, argv, "hvo:tplcs:")) != -1) {
     switch (opt) {
       case 'h': {
         show_help(argv[0]);
@@ -119,6 +169,10 @@ int main(int argc, char **argv) {
       case 't': {
         raw_tokens = true;
       } break;
+      case 's': {
+        dump_syms = true;
+        snprintf(symtable, sizeof(symtable), "%s", optarg);
+      } break;
     }
   }
 
@@ -133,22 +187,27 @@ int main(int argc, char **argv) {
   Error error = {0};
 
   if (!lexer(source, filename, &toks, &error)) check_error(&error);
-  if (mode == MODE_LEXER) goto done;
-  if (!preprocessor(&toks, &error)) check_error(&error);
-  if (mode == MODE_PREPROCESS) goto done;
-
-  cli_error("full compilation not supported yet.", argv[0]);
-
-done:
-  if (raw_tokens) {
-    for (size_t i = 0; i < toks.count; i++) {
-      Token tok = toks.items[i];
-      printf("%s %.*s\n", token_kind_name(tok.kind), (int)tok.length, tok.start);
-    }
-  } else {
-    delexer(&toks, stdout);
-    printf("\n");
+  if (mode == MODE_LEXER) {
+    show_ir(&toks, mode, raw_tokens, dump_syms, argv[0]);
+    return 0;
   }
+  if (!preprocessor(&toks, &error)) check_error(&error);
+  if (mode == MODE_PREPROCESS) {
+    show_ir(&toks, mode, raw_tokens, dump_syms, argv[0]);
+    return 0;
+  }
+
+  Symbols syms = {0};
+  if (!assemble(&syms, &toks, &error)) check_error(&error);
+
+  if (dump_syms) {
+    FILE *syms_out = get_handle(symtable, argv[0], false);
+    dump_symbols(&syms, syms_out);
+  }
+
+  FILE *out = get_handle(output, argv[0], false);
+  (void)out;
+  cli_error("full compilation not implemented yet", argv[0]);
 
   return 0;
 }

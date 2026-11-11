@@ -19,6 +19,7 @@ typedef struct {
 
 
 bool append_symbol(Symbol sym, Symbols *syms);
+// uses the token's lexeme as the name
 bool append_token_symbol(Symbols *syms, Token *tok, long value);
 bool lookup_symbol(const char *s, size_t length, Symbols *syms, long *value);
 
