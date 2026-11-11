@@ -222,6 +222,8 @@ bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
         EMIT_BYTE(OPCODE_CALL);
       } break;
 
+      // TODO: add base words
+
       default: break;
     }
   }
