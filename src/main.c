@@ -197,17 +197,17 @@ int main(int argc, char **argv) {
     return 0;
   }
 
+  if (!verify_syntax(&toks, &error)) check_error(&error);
+
   Symbols syms = {0};
-  if (!assemble(&syms, &toks, &error)) check_error(&error);
+  FILE *out = get_handle(output, argv[0], false);
+
+  if (!assemble(out, &syms, &toks, &error)) check_error(&error);
 
   if (dump_syms) {
     FILE *syms_out = get_handle(symtable, argv[0], false);
     dump_symbols(&syms, syms_out);
   }
-
-  FILE *out = get_handle(output, argv[0], false);
-  (void)out;
-  cli_error("full compilation not implemented yet", argv[0]);
 
   return 0;
 }

@@ -20,10 +20,11 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "preprocessor.h"
 #include "tokeniser.h"
 #include "parser.h"
 #include "errors.h"
+
+#include "preprocessor.h"
 
 #define ALLOC_START 0x38b0
 #define ALLOC_MAX   0x6fff
