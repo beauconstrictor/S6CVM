@@ -44,12 +44,12 @@ bool deparenthesise(Tokens *toks, Error *error) {
         return false;
       }
 
-      append_token(toks->items[i+1], &prefix_words);
-      remove_token(toks, i);
-      remove_token(toks, i);
+      if (!append_token(toks->items[i+1], &prefix_words)) return false;
+      if (!remove_token(toks, i)) return false;
+      if (!remove_token(toks, i)) return false;
       i -= 2;
     } else if (tok.kind == TOKEN_RPARA) {
-      remove_token(toks, i--);
+      if (!remove_token(toks, i--)) return false;
       if (prefix_words.count == 0) {
         *error = (Error) {
           .location = tok.location,
@@ -58,6 +58,7 @@ bool deparenthesise(Tokens *toks, Error *error) {
         };
         return false;
       }
+
       Token word = prefix_words.items[prefix_words.count - 1];
       if (word.kind != TOKEN_WORD) {
         *error = (Error) {
@@ -67,8 +68,11 @@ bool deparenthesise(Tokens *toks, Error *error) {
         };
         return false;
       }
-      remove_token(&prefix_words, prefix_words.count - 1);
-      insert_token(toks, i+1, word);
+
+      if (!remove_token(&prefix_words, prefix_words.count - 1))
+        return false;
+      if (!insert_token(toks, i+1, word)) return false;
+
       i++;
     }
   }
@@ -92,14 +96,14 @@ bool destringify(Tokens *toks, Error *error) {
     Token tok = toks->items[i];
     if (tok.kind != TOKEN_STRING) continue;
   
-    insert_token(toks, i++, (Token) {
+    if (!insert_token(toks, i++, (Token) {
         .kind = TOKEN_LBRACE,
         .start = "{",
         .length = 1,
         .location = tok.location,
-    });
+    })) return false;
 
-    remove_token(toks, i--);
+    if (!remove_token(toks, i--)) return false;
 
     // TODO: this leaks memory if tokens are removed. that's not
     // really a problem though for a short-lived compiler like this,
@@ -111,21 +115,21 @@ bool destringify(Tokens *toks, Error *error) {
       if (num == NULL) return false;
       int len = snprintf(num, 4, "%d", *s);
 
-      insert_token(toks, ++i, (Token) {
+      if (!insert_token(toks, ++i, (Token) {
           .kind = TOKEN_BYTE,
           .start = num,
           .length = len,
           .location = tok.location,
-      });
+      })) return false;
       s++;
     }
 
-    insert_token(toks, ++i, (Token) {
+    if (!insert_token(toks, ++i, (Token) {
         .kind = TOKEN_RBRACE,
         .start = "}",
         .length = 1,
         .location = tok.location,
-    } );
+    })) return false;
   }
 
   return true;
@@ -165,7 +169,7 @@ bool desymbolise(Tokens *toks, Error *error) {
       // we have to make sure to delete them _after_ any errors.
       // otherwise their locations won't exist anymore to print them.
       for (int x = 0; x < 4; x++)
-        remove_token(toks, i);
+        if (!remove_token(toks, i)) return false;
 
       continue;
 
@@ -202,7 +206,7 @@ bool desymbolise(Tokens *toks, Error *error) {
       allocator += size;
 
       for (int x = 0; x < 5; x++)
-        remove_token(toks, i);
+        if (!remove_token(toks, i)) return false;
  
       continue;
     }
@@ -226,13 +230,13 @@ bool desymbolise(Tokens *toks, Error *error) {
 
     snprintf(s, len + 1, "%ld", value);
 
-    remove_token(toks, i);
-    insert_token(toks, i, (Token) {
+    if (!remove_token(toks, i)) return false;
+    if (!insert_token(toks, i, (Token) {
         .kind = TOKEN_NUMBER,
         .start = s,
         .length = len,
         .location = tok.location,
-    });
+    })) return false;
   }
   
   return true;
@@ -311,10 +315,10 @@ static bool deanonymify_inner(Tokens *toks, struct Blocks *blocks,
 
     if (named) {
       for (size_t x = i + 1; x < end - 1; x++)
-        remove_token(toks, i + 1);
+        if (!remove_token(toks, i + 1)) return false;
 
       for (size_t x = 0; x < block.count; x++)
-        insert_token(toks, i + 1 + x, block.items[x]);
+        if (!insert_token(toks, i + 1 + x, block.items[x])) return false;
 
       i += block.count + 2;
       continue;
@@ -325,22 +329,20 @@ static bool deanonymify_inner(Tokens *toks, struct Blocks *blocks,
     );
 
     char *name = malloc(len + 1);
-    if (name == NULL)
-      return false;
+    if (name == NULL) return false;
 
     snprintf(name, len + 1, ANON_PREFIX "%zu", (*anon_count)++);
-    if (!append_block(block, blocks))
-      return false;
+    if (!append_block(block, blocks)) return false;
 
     for (size_t x = i; x < end; x++)
-      remove_token(toks, i);
+      if (!remove_token(toks, i)) return false;
 
-    insert_token(toks, i, (Token) {
+    if (!insert_token(toks, i, (Token) {
       .kind = TOKEN_WORD,
       .start = name,
       .length = len,
       .location = opening.location,
-    });
+    })) return false;
 
     i++;
   }
@@ -361,32 +363,38 @@ bool deanonymify(Tokens *toks, Error *error) {
     int len = snprintf(NULL, 0, ANON_PREFIX "%zu", i);
 
     char *name = malloc(len + 1);
-    if (name == NULL)
-      return false;
+    if (name == NULL) return false;
 
     snprintf(name, len + 1, ANON_PREFIX "%zu", i);
 
-    append_token((Token) {
+    if (!append_token((Token) {
       .kind = TOKEN_LBRACE,
       .start = "{",
       .length = 1,
-    }, toks);
+    }, toks)) return false;
 
-    append_token((Token) {
+    if (!append_token((Token) {
       .kind = TOKEN_DEFINITION,
       .start = name,
       .length = len,
-    }, toks);
+    }, toks)) return false;
 
     for (size_t j = 0; j < blocks.items[i].count; j++)
-      append_token(blocks.items[i].items[j], toks);
+      if (!append_token(blocks.items[i].items[j], toks)) return false;
 
-    append_token((Token) {
+    if (!append_token((Token) {
       .kind = TOKEN_RBRACE,
       .start = "}",
       .length = 1,
-    }, toks);
+    }, toks)) return false;
   }
+
+  return true;
+}
+
+bool deimplicate(Tokens *toks, Error *error) {
+  (void)toks;
+  (void)error;
 
   return true;
 }
@@ -399,6 +407,7 @@ bool preprocessor(Tokens *toks, Error *error) {
   if (!destringify(toks, error))    return false;
   if (!desymbolise(toks, error))    return false;
   if (!deanonymify(toks, error))    return false;
+  if (!deimplicate(toks, error))    return false;
 
   return true;
 }
