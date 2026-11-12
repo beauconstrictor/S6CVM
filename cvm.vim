@@ -9,9 +9,8 @@ highlight link cvm_if Conditional
 syntax keyword cvm_loop while
 highlight link cvm_loop Repeat
 
-syntax keyword cvm_builtin over add sub drop swap dup gt lt geq leq eq neq
+syntax keyword cvm_builtin over add sub drop swap dup gt lt geq leq eq neq puti puts
 highlight link cvm_builtin Function
-
 
 syntax region cvm_comment start=/</ end=/>/ contains=cvm_comment
 highlight link cvm_comment Comment

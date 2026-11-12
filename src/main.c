@@ -94,17 +94,16 @@ void show_version(const char *binary) {
 
 void show_ir(Tokens *toks, CompilationMode mode, bool raw_tokens,
     bool dump_syms, const char *binary) {
-  if (raw_tokens) {
-    for (size_t i = 0; i < toks->count; i++) {
-      Token tok = toks->items[i];
-      printf("%s %.*s\n", token_kind_name(tok.kind), (int)tok.length, tok.start);
-    }
-
-  } else if (dump_syms) {
+  if (dump_syms) {
     if (mode == MODE_LEXER)
       cli_error("cannot generate a symbol table in lexing mode", binary);
     if (mode == MODE_PREPROCESS)
       cli_error("cannot generate a symbol table in preprocessing mode", binary);
+  } else if (raw_tokens) {
+    for (size_t i = 0; i < toks->count; i++) {
+      Token tok = toks->items[i];
+      printf("%s %.*s\n", token_kind_name(tok.kind), (int)tok.length, tok.start);
+    }
 
   } else {
     delexer(toks, stdout);
