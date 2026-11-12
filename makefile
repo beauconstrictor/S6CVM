@@ -24,7 +24,7 @@ clean:
 
 .PHONY: run
 run: $(TARGET)
-	$(TARGET) -p test.cvm
+	$(TARGET) -o- -s- test.cvm
 
 .PHONY: dbg
 dbg: $(TARGET)

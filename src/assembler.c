@@ -39,28 +39,6 @@
                      \
   X("puti",    0x0e) \
 
-
-#define GIVE_ERROR(msg, tok) \
-  do { \
-    *error = (Error) { \
-      .location = tok.location, \
-      .message = msg, \
-      .set = true, \
-    }; \
-    return false; \
-  } while (false) \
-
-#define GIVE_ERROR_WITH_LEXEME(msg, tok) \
-  do { \
-    snprintf(buf, sizeof(buf), msg, (int)tok.length, tok.start); \
-    *error = (Error) { \
-      .location = tok.location, \
-      .message = buf, \
-      .set = true, \
-    }; \
-    return false; \
-  } while (false) \
-
 bool verify_syntax(Tokens *toks, Error *error) {
   static char buf[256];
 
