@@ -1,1 +1,2 @@
 {:if <condition true -- > (if-else {})}
+{:puti < -- > }

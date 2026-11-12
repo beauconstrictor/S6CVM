@@ -10,34 +10,13 @@
 /*
  * TODO: don't emit unreferenced subroutines into the binary?
  * TODO: deduplicate subroutines with the same instructions
+ * TODO: mandatory 'main' entry point
  */
 
 #define PC_MIN 0x0800
 #define PC_MAX 0x3b7f
 
-#define OPCODE_CALL 0x00
-#define OPCODE_PUSH 0x01
-#define OPCODE_RET  0x02
-
 #define ENTRY_POINT "main"
-
-#define INSTRUCTIONS \
-  X("i",       0x03) \
-  X("if-else", 0x04) \
-  X("while",   0x05) \
-                     \
-  X("add",     0x06) \
-  X("sub",     0x07) \
-                     \
-  X("gt",      0x08) \
-  X("sub",     0x09) \
-                     \
-  X("dup",     0x0a) \
-  X("drop",    0x0b) \
-  X("swap",    0x0c) \
-  X("over",    0x0d) \
-                     \
-  X("puti",    0x0e) \
 
 bool verify_syntax(Tokens *toks, Error *error) {
   static char buf[256];
@@ -104,8 +83,29 @@ bool verify_syntax(Tokens *toks, Error *error) {
   return true;
 }
 
+int get_opcode(Token *tok) {
+  char buf[256];
+  snprintf(buf, sizeof(buf), "%.*s", (int)tok->length, tok->start);
+
+  // prevent duplicate opcodes at compile time (i'm stupid, so i need
+  // this)
+  #define X(mnemonic, opcode) \
+    [opcode] = mnemonic,
+  const char *instrs[] = { INSTRUCTIONS };
+  (void)instrs;
+  #undef X
+
+  #define X(mnemonic, opcode) \
+      if (strcmp(buf, mnemonic) == 0) return opcode;
+  INSTRUCTIONS
+  #undef X
+
+  return -1;
+}
+
 bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
   uint16_t pc = PC_MIN;
+  bool is_addr_of = false;
 
   for (size_t i = 0; i < toks->count; i++) {
     Token tok = toks->items[i];
@@ -116,15 +116,12 @@ bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
       }
     }
 
-    bool is_addr_of = false;
-
     switch (tok.kind) {
       // all eliminated by the preprocessor
       case TOKEN_LSQUARE:
       case TOKEN_RSQUARE:
       case TOKEN_IMPORT:
       case TOKEN_LBRACE:
-      case TOKEN_RBRACE:
       case TOKEN_STRING:
       case TOKEN_ASSIGN:
       case TOKEN_CONST:
@@ -144,6 +141,12 @@ bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
       } break;
 
       case TOKEN_WORD: {
+        int opcode = get_opcode(&tok);
+        if (opcode == -1) {
+          pc++;
+          break;
+        }
+
         // 1. push opcode - one byte
         // 2. (16-bit) operand - two bytes
         pc += 3;
@@ -158,6 +161,7 @@ bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
         is_addr_of = true;
       } break;
 
+      case TOKEN_RBRACE:
       case TOKEN_BYTE: {
         // inserts RAW bytes, not to be interpreted as opcodes
         pc++;
@@ -166,26 +170,6 @@ bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
   }
 
   return true;
-}
-
-int get_opcode(Token *tok) {
-  char buf[256];
-  snprintf(buf, sizeof(buf), "%.*s", (int)tok->length, tok->start);
-
-  // prevent duplicate opcodes at compile time (i'm stupid, so i need
-  // this)
-  #define X(mnemonic, opcode) \
-    [opcode] = mnemonic,
-  const char *instrs[] = { INSTRUCTIONS };
-  (void)instrs;
-  #undef X
-
-  #define X(mnemonic, opcode) \
-      if (strcmp(buf, mnemonic) == 0) return opcode;
-  INSTRUCTIONS
-  #undef X
-
-  return -1;
 }
 
 bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
@@ -210,7 +194,7 @@ bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
       case TOKEN_DEFINITION: {
         if (!lookup_symbol(tok.start, tok.length, syms, &pc))
           GIVE_ERROR_WITH_LEXEME("undefined symbol: '%.*s'", tok);
-        fprintf(f, ":%ld ", pc);
+        fprintf(f, ":%04x ", (unsigned)pc);
       } break;
 
       case TOKEN_RBRACE: {
@@ -252,7 +236,7 @@ bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
         if (error->set) return false;
         EMIT_BYTE(OPCODE_PUSH);
         EMIT_WORD((int)addr);
-        EMIT_BYTE(OPCODE_CALL);
+        EMIT_BYTE(OPCODE_I);
       } break;
 
       // TODO: add base words
@@ -262,10 +246,12 @@ bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
   }
   
   long main_addr;
-  if (lookup_symbol(ENTRY_POINT, sizeof(ENTRY_POINT)-1, syms, &main_addr))
-    fprintf(f, "!%04x", (unsigned)main_addr);
+  if (!lookup_symbol(ENTRY_POINT, sizeof(ENTRY_POINT)-1, syms, &main_addr)) {
+    Token tok = toks->items[toks->count];
+    GIVE_ERROR("missing '" ENTRY_POINT "' entry point", tok);
+  }
 
-  fprintf(f, "\nT\n");
+  fprintf(f, "!%04x\nT\n", (unsigned)main_addr);
 
   #undef EMIT_BYTE
   #undef EMIT_WORD

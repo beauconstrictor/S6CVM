@@ -8,6 +8,7 @@
 #include "parser.h"
 #include "tokeniser.h"
 #include "assembler.h"
+#include "simulator.h"
 #include "preprocessor.h"
 
 #define USAGE "Usage: %s [OPTION]... [MODE] FILE \n" \
@@ -27,6 +28,7 @@
              "\t-l  Stop compilation after lexing\n" \
              "\t-p  Stop compilation after preprocessing\n" \
              "\t-c  Fully compile program (default)\n" \
+             "\t-i  Immediately interpret program\n" \
              "\n" \
              "Use '-' in place of paths to use the standard output.\n" \
 
@@ -37,9 +39,10 @@
                 "<https://github.com/beauconstrictor/s6cvm>\n"
 
 typedef enum {
-  MODE_COMPILE,
   MODE_LEXER,
-  MODE_PREPROCESS
+  MODE_PREPROCESS,
+  MODE_COMPILE,
+  MODE_INTERPRET,
 } CompilationMode;
 
 void show_help(const char *binary) {
@@ -101,7 +104,7 @@ int main(int argc, char **argv) {
   bool raw_tokens = false;
   bool dump_syms  = false;
 
-  while ((opt = getopt(argc, argv, "hvo:tplcs:")) != -1) {
+  while ((opt = getopt(argc, argv, "hvo:tplcis:")) != -1) {
     switch (opt) {
       case 'h': {
         show_help(argv[0]);
@@ -122,6 +125,9 @@ int main(int argc, char **argv) {
       } break;
       case 'c': {
         mode = MODE_COMPILE;
+      } break;
+      case 'i': {
+        mode = MODE_INTERPRET;
       } break;
       case 't': {
         raw_tokens = true;
@@ -168,6 +174,15 @@ int main(int argc, char **argv) {
     dump_symbols(&vars, syms_out);
     fprintf(syms_out, "\n");
     dump_symbols(&syms, syms_out);
+  }
+  
+  if (out != stdout) fclose(out);
+
+  if (mode == MODE_INTERPRET) {
+    char *tape = read_file(output);
+    if (tape == NULL) cli_error("no such file", argv[0]);
+    const char *error = simulate(tape);
+    if (error) cli_error(error, argv[0]);
   }
 
   return 0;
