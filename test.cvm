@@ -1,17 +1,13 @@
-<{:fib <n : fib(n)>
+var test[5]
+var test2[5]
+
+{:if <condition true -- > (if-else {})}
+
+{:fib <n -- fib(n)>
     (if (gt 1), {
         (add (fib (sub dup, 1)), (fib (sub over, 2)))
         (drop swap)
     })
 }
 
-{:main (puti (fib 5))}>
-
-
-{:fib
-  1 gt ___anon_0 if 
-} {:main
-  5 fib puti 
-} {:___anon_0
-  dup 1 sub fib over 2 sub fib add swap drop 
-} 
+{:main (puti (fib 5))}

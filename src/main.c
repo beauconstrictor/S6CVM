@@ -191,7 +191,8 @@ int main(int argc, char **argv) {
     show_ir(&toks, mode, raw_tokens, dump_syms, argv[0]);
     return 0;
   }
-  if (!preprocessor(&toks, &error)) check_error(&error);
+  Symbols vars = {0};
+  if (!preprocessor(&toks, &vars, &error)) check_error(&error);
   if (mode == MODE_PREPROCESS) {
     show_ir(&toks, mode, raw_tokens, dump_syms, argv[0]);
     return 0;
@@ -206,6 +207,9 @@ int main(int argc, char **argv) {
 
   if (dump_syms) {
     FILE *syms_out = get_handle(symtable, argv[0], false);
+    if (syms_out == out) fprintf(out, "\n");
+    dump_symbols(&vars, syms_out);
+    fprintf(syms_out, "\n");
     dump_symbols(&syms, syms_out);
   }
 

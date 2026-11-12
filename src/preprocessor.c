@@ -136,9 +136,7 @@ bool destringify(Tokens *toks, Error *error) {
   return true;
 }
 
-bool desymbolise(Tokens *toks, Error *error) {
-  Symbols syms = {0};
-
+bool desymbolise(Tokens *toks, Symbols *syms, Error *error) {
   size_t allocator = ALLOC_START;
 
   size_t i = 0;
@@ -165,7 +163,7 @@ bool desymbolise(Tokens *toks, Error *error) {
       long value = read_number(&rval, error);
       if (error->set) return false;
 
-      if (!append_token_symbol(&syms, &lval, value)) return false;
+      if (!append_token_symbol(syms, &lval, value)) return false;
 
       // we have to make sure to delete them _after_ any errors.
       // otherwise their locations won't exist anymore to print them.
@@ -203,7 +201,7 @@ bool desymbolise(Tokens *toks, Error *error) {
         return false;
       }
 
-      if (!append_token_symbol(&syms, &lval, allocator)) return false;
+      if (!append_token_symbol(syms, &lval, allocator)) return false;
       allocator += size;
 
       for (int x = 0; x < 5; x++)
@@ -223,7 +221,7 @@ bool desymbolise(Tokens *toks, Error *error) {
     if (tok.kind != TOKEN_WORD) continue;
 
     long value;
-    if (!lookup_symbol(tok.start, tok.length, &syms, &value)) continue;
+    if (!lookup_symbol(tok.start, tok.length, syms, &value)) continue;
 
     int len = snprintf(NULL, 0, "%ld", value);
     char *s = malloc(len + 1);
@@ -400,15 +398,15 @@ bool deimplicate(Tokens *toks, Error *error) {
   return true;
 }
 
-bool preprocessor(Tokens *toks, Error *error) {
+bool preprocessor(Tokens *toks, Symbols *syms, Error *error) {
   (void)toks;
   (void)error;
 
-  if (!deparenthesise(toks, error)) return false;
-  if (!destringify(toks, error))    return false;
-  if (!desymbolise(toks, error))    return false;
-  if (!deanonymify(toks, error))    return false;
-  if (!deimplicate(toks, error))    return false;
+  if (!deparenthesise(toks, error))    return false;
+  if (!destringify(toks, error))       return false;
+  if (!desymbolise(toks, syms, error)) return false;
+  if (!deanonymify(toks, error))       return false;
+  if (!deimplicate(toks, error))       return false;
 
   return true;
 }

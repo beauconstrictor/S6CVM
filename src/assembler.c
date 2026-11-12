@@ -1,16 +1,44 @@
 #include <stdint.h>
 #include <assert.h>
+#include <string.h>
 
 #include "tokeniser.h"
 #include "parser.h"
 
 #include "assembler.h"
 
+/*
+ * TODO: don't emit unreferenced subroutines into the binary?
+ * TODO: deduplicate subroutines with the same instructions
+ */
+
 #define PC_MIN 0x0800
 #define PC_MAX 0x3b7f
 
 #define OPCODE_CALL 0x00
 #define OPCODE_PUSH 0x01
+#define OPCODE_RET  0x02
+
+#define ENTRY_POINT "main"
+
+#define INSTRUCTIONS \
+  X("i",       0x03) \
+  X("if-else", 0x04) \
+  X("while",   0x05) \
+                     \
+  X("add",     0x06) \
+  X("sub",     0x07) \
+                     \
+  X("gt",      0x08) \
+  X("sub",     0x09) \
+                     \
+  X("dup",     0x0a) \
+  X("drop",    0x0b) \
+  X("swap",    0x0c) \
+  X("over",    0x0d) \
+                     \
+  X("puti",    0x0e) \
+
 
 #define GIVE_ERROR(msg, tok) \
   do { \
@@ -161,11 +189,31 @@ bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
   return true;
 }
 
+int get_opcode(Token *tok) {
+  char buf[256];
+  snprintf(buf, sizeof(buf), "%.*s", (int)tok->length, tok->start);
+
+  // prevent duplicate opcodes at compile time (i'm stupid, so i need
+  // this)
+  #define X(mnemonic, opcode) \
+    [opcode] = mnemonic,
+  const char *instrs[] = { INSTRUCTIONS };
+  (void)instrs;
+  #undef X
+
+  #define X(mnemonic, opcode) \
+      if (strcmp(buf, mnemonic) == 0) return opcode;
+  INSTRUCTIONS
+  #undef X
+
+  return -1;
+}
+
 bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
   if (!arrange_definitions(syms, toks, error)) return false;
 
   #define EMIT_BYTE(byte) fprintf(f,"%02x", byte &   0xff);
-  #define EMIT_WORD(word) fprintf(f,"%04x", word & 0xffff); // it's big endian
+  #define EMIT_WORD(word) fprintf(f,"%04x", word & 0xffff);
 
   static char buf[256];
   long pc;
@@ -187,7 +235,7 @@ bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
       } break;
 
       case TOKEN_RBRACE: {
-        fprintf(f, " ;\n");
+        fprintf(f, "%02x ;\n", OPCODE_RET);
       } break;
 
       case TOKEN_BYTE: {
@@ -213,6 +261,12 @@ bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
       } break;
 
       case TOKEN_WORD: {
+        int opcode = get_opcode(&tok);
+        if (opcode >= 0) {
+          EMIT_BYTE(opcode);
+          break;
+        }
+
         long addr;
         if (!lookup_symbol(tok.start, tok.length, syms, &addr))
           GIVE_ERROR_WITH_LEXEME("undefined symbol: '%.*s'", tok);
@@ -227,6 +281,10 @@ bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
       default: break;
     }
   }
+  
+  long main_addr;
+  if (lookup_symbol(ENTRY_POINT, sizeof(ENTRY_POINT)-1, syms, &main_addr))
+    fprintf(f, "!%04x", (unsigned)main_addr);
 
   fprintf(f, "\nT\n");
 
