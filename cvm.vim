@@ -1,6 +1,6 @@
 syntax clear
 
-syntax keyword cvm_keyword var const
+syntax keyword cvm_keyword var const import
 highlight link cvm_keyword Keyword
 
 syntax keyword cvm_if if if-else
