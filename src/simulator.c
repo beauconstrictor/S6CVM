@@ -41,28 +41,77 @@ bool dstack_push(DStack *dstack, uint16_t val) {
   return true;
 }
 
+bool dstack_pop(DStack *dstack, uint16_t *val) {
+  if (dstack->head == 0) return false;
+  *val = dstack->data[--dstack->head];
+  return true;
+}
+
 const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory, int memsize) {
+  static char err_msg[256];
+
+  #define POP(var) \
+        if (!dstack_pop(dstack, &var)) return "stack underflow";
+  #define PUSH(var) \
+        if (!dstack_push(dstack, var)) return "stack overflow";
+
+  #define BINARY_OPERATOR(opcode, operation) \
+        case OPCODE_##opcode: { \
+          uint16_t b; \
+          POP(b); \
+          uint16_t a; \
+          POP(a); \
+          PUSH(operation); \
+        } break;
+
+
   for (;;) {
     if (addr >= memsize) return "segmentation fault";
     uint8_t opcode = memory[addr++];
 
-    printf("%02x, %02x\n", opcode, OPCODE_PUSH);
-
     switch (opcode) {
+      case OPCODE_I: {
+        uint16_t subroutine;
+        POP(subroutine);
+        const char *error = execute(dstack, subroutine, memory, memsize);
+        if (error) return error;
+      } break;
+
       case OPCODE_PUSH: {
         if (addr >= memsize - 2) return "segmentation fault";
-        uint16_t opcode = (memory[addr] << 8) | memory[addr + 1];
+        uint16_t val = (memory[addr] << 8) | memory[addr + 1];
         addr += 2;
-        if (!dstack_push(dstack, opcode)) return "stack overflow";
+        PUSH(val);
+      } break;
+
+      case OPCODE_RET: {
+        return NULL;
+      } break;
+
+      BINARY_OPERATOR(ADD, a + b)
+      BINARY_OPERATOR(SUB, a - b)
+
+      BINARY_OPERATOR(GT,  a > b)
+
+      case OPCODE_DUP: {
+        uint16_t val;
+        POP(val);
+        PUSH(val);
+        PUSH(val);
+      } break;
+
+      case OPCODE_PUTI: {
+        uint16_t val;
+        POP(val);
+        printf("OUTPUT: %u\n", val);
       } break;
 
       default: {
-        return "unsupported opcode";
+        snprintf(err_msg, sizeof(err_msg), "unsupported opcode: 0x%02x", opcode);
+        return err_msg;
       } break;
     }
   }
-
-  return NULL;
 }
 
 const char *simulate(const char *s) {

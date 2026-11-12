@@ -24,6 +24,8 @@
 #define OPCODE_SWAP 0x0b
 #define OPCODE_OVER 0x0c
 
+#define OPCODE_PUTI 0x0d // temporary!
+
 #define INSTRUCTIONS        \
   X("i",       OPCODE_I)    \
   X("if-else", OPCODE_IF)   \
@@ -38,6 +40,8 @@
   X("drop",    OPCODE_DROP) \
   X("swap",    OPCODE_SWAP) \
   X("over",    OPCODE_OVER) \
+                            \
+  X("puti",    OPCODE_PUTI) \
 
 bool verify_syntax(Tokens *toks, Error *error);
 // make sure to verify syntax before calling!

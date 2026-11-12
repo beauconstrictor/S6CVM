@@ -109,7 +109,6 @@ char *read_file(const char *path) {
 
   contents[bytes_read] = '\0';
 
-  // remove terminating newline
   if (bytes_read > 0 && contents[bytes_read - 1] == '\n') {
     contents[--bytes_read] = '\0';
   }

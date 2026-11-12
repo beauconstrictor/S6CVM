@@ -175,8 +175,8 @@ bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
 bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
   if (!arrange_definitions(syms, toks, error)) return false;
 
-  #define EMIT_BYTE(byte) fprintf(f,"%02x", byte &   0xff);
-  #define EMIT_WORD(word) fprintf(f,"%04x", word & 0xffff);
+  #define EMIT_BYTE(byte) fprintf(f,"%02x ", byte &   0xff);
+  #define EMIT_WORD(word) fprintf(f,"%02x %02x ", word >> 8, word & 0xff);
 
   static char buf[256];
   long pc;
