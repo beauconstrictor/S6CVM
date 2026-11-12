@@ -6,6 +6,7 @@
 
 #include "errors.h"
 
+#define IMPORT_WORD "import"
 #define CONST_WORD "const"
 #define VAR_WORD "var"
 
@@ -13,6 +14,7 @@
   X(DEFINITION) \
   X(LSQUARE) \
   X(RSQUARE) \
+  X(IMPORT) \
   X(NUMBER) \
   X(STRING) \
   X(LBRACE) \

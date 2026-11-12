@@ -74,3 +74,45 @@ long read_number(const Token *tok, Error *error) {
   return value;
 }
 
+char *read_file(const char *path) {
+  FILE *file = fopen(path, "rb");
+
+  if (file == NULL) {
+    return NULL;
+  }
+
+  fseek(file, 0, SEEK_END);
+  long size = ftell(file);
+  rewind(file);
+
+  if (size < 0) {
+    fclose(file);
+    return NULL;
+  }
+
+  char *contents = malloc((size_t)size + 1);
+
+  if (contents == NULL) {
+    fclose(file);
+    return NULL;
+  }
+
+  size_t bytes_read = fread(contents, 1, (size_t)size, file);
+
+  fclose(file);
+
+  if (bytes_read != (size_t)size) {
+    free(contents);
+    return NULL;
+  }
+
+  contents[bytes_read] = '\0';
+
+  // remove terminating newline
+  if (bytes_read > 0 && contents[bytes_read - 1] == '\n') {
+    contents[--bytes_read] = '\0';
+  }
+
+  return contents;
+}
+

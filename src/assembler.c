@@ -144,6 +144,7 @@ bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
       // all eliminated by the preprocessor
       case TOKEN_LSQUARE:
       case TOKEN_RSQUARE:
+      case TOKEN_IMPORT:
       case TOKEN_LBRACE:
       case TOKEN_RBRACE:
       case TOKEN_STRING:

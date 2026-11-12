@@ -12,12 +12,13 @@
 //   -> move anonymous blocks to global named blocks, with internal
 //      names like ___anon_0
 //
-// 5. deimplication
-//   -> turn all implicit calls like 'fib' into '&fib call'
+// 5. deimportation
+//   -> recursively include the contents of imported files
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <stdbool.h>
 
 #include "tokeniser.h"
@@ -28,6 +29,10 @@
 
 #define ALLOC_START 0x38b0
 #define ALLOC_MAX   0x6fff
+
+/*
+ * TODO: use GIVE_ERROR everywhere
+ */
 
 bool deparenthesise(Tokens *toks, Error *error) {
   Tokens prefix_words = create_tokens();
@@ -391,9 +396,47 @@ bool deanonymify(Tokens *toks, Error *error) {
   return true;
 }
 
-bool deimplicate(Tokens *toks, Error *error) {
+bool deimport(Tokens *toks, Error *error) {
   (void)toks;
   (void)error;
+
+  // for the error with lexeme
+  // TODO: i think this needs to be static, but maybe not? check back
+  static char buf[256];
+
+  for (size_t i = 0; i < toks->count; i++) {
+    Token tok = toks->items[i];
+
+    if (tok.kind != TOKEN_IMPORT) continue;
+
+    Token next;
+    bool has_next = i < toks->count - 1;
+    if (has_next) next = toks->items[i+1];
+
+    if (!has_next)
+      GIVE_ERROR("expected name after import", tok);
+    else if (next.kind != TOKEN_WORD)
+      GIVE_ERROR("expected name after import", next);
+
+    char path[PATH_MAX];
+    Tokens new_toks = {0};
+    snprintf(path, sizeof(path), "%.*s.cvm", (int)next.length, next.start);
+
+    if (!remove_token(toks, i)) return false;
+    if (!remove_token(toks, i)) return false;
+
+    char *source = read_file(path);
+    if (source == NULL) GIVE_ERROR_WITH_LEXEME("no such file: '%.*s'", next);
+
+    if (!lexer(source, path, &new_toks, error)) return false;
+
+    size_t insert = i;
+
+    for (size_t x = 0; x < new_toks.count; x++) {
+      Token subtok = new_toks.items[x];
+      if (!insert_token(toks, insert++, subtok)) return false;
+    }
+  }
 
   return true;
 }
@@ -402,11 +445,11 @@ bool preprocessor(Tokens *toks, Symbols *syms, Error *error) {
   (void)toks;
   (void)error;
 
+  if (!deimport(toks, error))          return false;
   if (!deparenthesise(toks, error))    return false;
   if (!destringify(toks, error))       return false;
   if (!desymbolise(toks, syms, error)) return false;
   if (!deanonymify(toks, error))       return false;
-  if (!deimplicate(toks, error))       return false;
 
   return true;
 }

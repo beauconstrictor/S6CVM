@@ -1,4 +1,4 @@
-{:if <condition true -- > (if-else {})}
+import io 
 
 {:fib <n -- fib(n)>
     (if (gt 1), {
