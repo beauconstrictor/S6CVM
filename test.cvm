@@ -21,10 +21,11 @@ var countdown[2]
 }
 
 {:main
-  "25 Fibonacci numbers:" &putc i
+  (puts "Hello, world!")
 }
 
 {:test
+  (puts "25 Fibonacci numbers:")
   (puti 0)
   (puti 1)
   (set countdown (sub COUNT 2))

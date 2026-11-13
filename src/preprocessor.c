@@ -131,6 +131,13 @@ bool destringify(Tokens *toks, Error *error) {
     }
 
     if (!insert_token(toks, ++i, (Token) {
+        .kind = TOKEN_BYTE,
+        .start = "0",
+        .length = 1,
+        .location = tok.location,
+    })) return false;
+
+    if (!insert_token(toks, ++i, (Token) {
         .kind = TOKEN_RBRACE,
         .start = "}",
         .length = 1,
