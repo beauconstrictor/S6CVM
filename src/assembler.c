@@ -213,8 +213,12 @@ bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error) {
 
       case TOKEN_ADDR: {
         long addr;
-        if (!lookup_symbol(next.start, next.length, syms, &addr))
-          GIVE_ERROR_WITH_LEXEME("undefined symbol: '%.*s'", tok);
+        if (!lookup_symbol(next.start, next.length, syms, &addr)) {
+          if (get_opcode(&next) != -1) {
+            GIVE_ERROR_WITH_LEXEME("'%.*s' is an instruction, not a function", next);
+          } else
+            GIVE_ERROR_WITH_LEXEME("undefined symbol: '%.*s'", next);
+        }
         if (error->set) return false;
         EMIT_BYTE(OPCODE_PUSH);
         EMIT_WORD((int)addr);

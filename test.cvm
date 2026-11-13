@@ -1,6 +1,6 @@
 import std
 
-const COUNT = 23
+const COUNT = 25
 
 var countdown[2]
 
@@ -21,8 +21,12 @@ var countdown[2]
 }
 
 {:main
-  (set countdown COUNT)
+  "25 Fibonacci numbers:" &putc i
+}
+
+{:test
   (puti 0)
   (puti 1)
+  (set countdown (sub COUNT 2))
   (fib-from 0 1)
 }
