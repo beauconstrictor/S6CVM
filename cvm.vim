@@ -1,7 +1,7 @@
 syntax clear
 
 syntax keyword cvm_loop
-      \ while
+      \ while do-while
 
 syntax keyword cvm_if
       \ if if-else
