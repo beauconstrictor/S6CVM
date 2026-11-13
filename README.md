@@ -27,6 +27,7 @@ To install `cvmc`, you will need to install `clang` and `make`. Then, just run t
 
 ```sh
 $ git clone https://github.com/beauconstrictor/cvmc
+$ cd cvmc/
 $ make
 ```
 
