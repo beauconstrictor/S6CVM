@@ -47,7 +47,8 @@ bool dstack_pop(DStack *dstack, uint16_t *val) {
   return true;
 }
 
-const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory, int memsize) {
+const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory,
+    int memsize) {
   static char err_msg[256];
 
   #define POP(var) \
@@ -64,22 +65,41 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory, int memsize)
           PUSH(operation); \
         } break;
 
+  #define CALL(addr) \
+    do { \
+        const char *error = execute(dstack, addr, memory, \
+            memsize); \
+        if (error) return error; \
+    } while (false)
+
 
   for (;;) {
     if (addr >= memsize) return "segmentation fault";
-    uint8_t opcode = memory[addr++];
+    uint8_t opcode = memory[addr];
+
+    // printf("<%d (0x%04x) '%s", addr, addr, mnemonics[opcode]);
+
+    // if (opcode == OPCODE_PUSH)
+    //   printf(" %d (0x%04x)", memory[addr+1], memory[addr+1]);
+    // printf("'>");
+
+    // if (dstack->head > 0)
+    //   printf(" ~ ");
+    // for (size_t i = 0; i < dstack->head; i++) {
+    //   printf("%d ", dstack->data[i]);
+    // }
+    // printf("\n");
 
     switch (opcode) {
       case OPCODE_I: {
         uint16_t subroutine;
         POP(subroutine);
-        const char *error = execute(dstack, subroutine, memory, memsize);
-        if (error) return error;
+        CALL(subroutine);
       } break;
 
       case OPCODE_PUSH: {
         if (addr >= memsize - 2) return "segmentation fault";
-        uint16_t val = (memory[addr] << 8) | memory[addr + 1];
+        uint16_t val = (memory[addr+1] << 8) | memory[addr + 2];
         addr += 2;
         PUSH(val);
       } break;
@@ -92,6 +112,7 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory, int memsize)
       BINARY_OPERATOR(SUB, a - b)
 
       BINARY_OPERATOR(GT,  a > b)
+      BINARY_OPERATOR(EQ,  a == b)
 
       case OPCODE_DUP: {
         uint16_t val;
@@ -100,24 +121,66 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory, int memsize)
         PUSH(val);
       } break;
 
+      case OPCODE_DROP: {
+        uint16_t val;
+        POP(val);
+      } break;
+
+      case OPCODE_OVER: {
+        uint16_t b;
+        POP(b);
+        uint16_t a;
+        POP(a);
+        PUSH(a);
+        PUSH(b);
+        PUSH(a);
+      } break;
+
+      case OPCODE_SWAP: {
+        uint16_t b;
+        POP(b);
+        uint16_t a;
+        POP(a);
+        PUSH(b);
+        PUSH(a);
+      } break;
+
       case OPCODE_PUTI: {
         uint16_t val;
         POP(val);
-        printf("OUTPUT: %u\n", val);
+        printf("%u\n", val);
+      } break;
+
+      case OPCODE_IF: {
+        uint16_t false_block;
+        POP(false_block);
+        uint16_t true_block;
+        POP(true_block);
+        uint16_t condition;
+        POP(condition);
+
+        if (condition == 0)
+          CALL(false_block);
+        else
+          CALL(true_block);
       } break;
 
       default: {
-        snprintf(err_msg, sizeof(err_msg), "unsupported opcode: 0x%02x", opcode);
+        snprintf(err_msg, sizeof(err_msg),
+            "unsupported opcode: 0x%02x @ %d (0x%04x)", opcode,
+            addr, addr);
         return err_msg;
       } break;
     }
+
+    addr++;
   }
 }
 
 const char *simulate(const char *s) {
   int addr = -1;
 
-  uint8_t memory[65536] = {0xff};
+  uint8_t memory[65536] = {0};
 
   DStack dstack = {0};
 

@@ -18,6 +18,7 @@
 #define OPCODE_SUB  0x06
 
 #define OPCODE_GT   0x07
+#define OPCODE_EQ   0x08
 
 #define OPCODE_DUP  0x09
 #define OPCODE_DROP 0x0a
@@ -35,6 +36,7 @@
   X("sub",     OPCODE_SUB)  \
                             \
   X("gt",      OPCODE_GT)   \
+  X("eq",      OPCODE_EQ)   \
                             \
   X("dup",     OPCODE_DUP)  \
   X("drop",    OPCODE_DROP) \
@@ -46,5 +48,7 @@
 bool verify_syntax(Tokens *toks, Error *error);
 // make sure to verify syntax before calling!
 bool assemble(FILE *f, Symbols *syms, Tokens *toks, Error *error);
+
+extern const char *mnemonics[];
 
 #endif // ASSEMBLER_H

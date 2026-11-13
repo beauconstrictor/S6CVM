@@ -18,6 +18,15 @@
 
 #define ENTRY_POINT "main"
 
+#define X(mnemonic, opcode) \
+  [opcode] = mnemonic,
+const char *mnemonics[] = {
+  [OPCODE_PUSH] = "_push",
+  [OPCODE_RET] = "_ret",
+  INSTRUCTIONS
+};
+#undef X
+
 bool verify_syntax(Tokens *toks, Error *error) {
   static char buf[256];
 
@@ -111,9 +120,8 @@ bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
     Token tok = toks->items[i];
 
     if (pc > PC_MAX) {
-      if (i + 1 >= toks->count) {
+      if (i + 1 >= toks->count)
         GIVE_ERROR("insufficient space for code allocation", tok);
-      }
     }
 
     switch (tok.kind) {
@@ -127,6 +135,7 @@ bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
       case TOKEN_CONST:
       case TOKEN_LPARA:
       case TOKEN_RPARA:
+      case TOKEN_ADDR:
       case TOKEN_VAR:
         break;
 
@@ -142,23 +151,16 @@ bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
 
       case TOKEN_WORD: {
         int opcode = get_opcode(&tok);
-        if (opcode == -1) {
+        if (opcode != -1) {
           pc++;
           break;
         }
-
         // 1. push opcode - one byte
         // 2. (16-bit) operand - two bytes
         pc += 3;
-        if (!is_addr_of) {
-          // 3. call opcode - one byte
+        // 3. call opcode - one byte
+        if (!is_addr_of)
           pc++;
-          is_addr_of = false;
-        }
-      } break;
-
-      case TOKEN_ADDR: {
-        is_addr_of = true;
       } break;
 
       case TOKEN_RBRACE:
@@ -167,6 +169,8 @@ bool arrange_definitions(Symbols *syms, Tokens *toks, Error *error) {
         pc++;
       } break;
     }
+
+    is_addr_of = tok.kind == TOKEN_ADDR;
   }
 
   return true;

@@ -1,10 +1,18 @@
 import std
 
-{:fib <n -- fib(n)>
-    (if (gt 1), {
+{:fib <n -- n'>
+    (if (gt dup, 1), {
         (add (fib (sub dup, 1)), (fib (sub over, 2)))
         (drop swap)
     })
 }
 
-{:main (puti (fib 5))}
+{:fibfrom
+  (puti (fib dup))
+  (add 1)
+  fibfrom
+}
+
+{:main
+  (fibfrom 1)
+}

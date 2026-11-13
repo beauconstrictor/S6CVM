@@ -341,6 +341,13 @@ static bool deanonymify_inner(Tokens *toks, struct Blocks *blocks,
     for (size_t x = i; x < end; x++)
       if (!remove_token(toks, i)) return false;
 
+    if (!insert_token(toks, i++, (Token) {
+      .kind = TOKEN_ADDR,
+      .start = "&",
+      .length = 1,
+      .location = opening.location,
+    })) return false;
+
     if (!insert_token(toks, i, (Token) {
       .kind = TOKEN_WORD,
       .start = name,
