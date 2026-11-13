@@ -1,17 +1,25 @@
 import std
 
-{:fib <n -- n'>
-    (if (gt dup, 1), {
-        (add (fib (sub dup, 1)), (fib (sub over, 2)))
-        (drop swap)
-    })
-}
+var countdown[2]
 
-{:fib-from
-  (puti (fib dup))
-  (fib-from (add 1))
+{:fib-from <a b -- >
+  (set countdown (dec (get countdown)))
+
+  (if (gt (get countdown) 1) {
+    (fib-from (puti
+      over
+      over
+      add
+      rot
+      drop
+      dup
+    ))
+  })
 }
 
 {:main
-  (fib-from 1)
+  (set countdown 25)
+  (puti 0)
+  (puti 1)
+  (fib-from 0 1)
 }

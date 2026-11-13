@@ -7,25 +7,29 @@
 #include "parser.h"
 #include "tokeniser.h"
 
-#define OPCODE_I    0x00
-#define OPCODE_PUSH 0x01
-#define OPCODE_RET  0x02
+#define OPCODE_I     0x00
+#define OPCODE_PUSH  0x01
+#define OPCODE_RET   0x02
 
-#define OPCODE_IF   0x03
-#define OPCODE_WHIL 0x04
+#define OPCODE_IF    0x03
+#define OPCODE_WHIL  0x04
 
-#define OPCODE_ADD  0x05
-#define OPCODE_SUB  0x06
+#define OPCODE_ADD   0x05
+#define OPCODE_SUB   0x06
 
-#define OPCODE_GT   0x07
-#define OPCODE_EQ   0x08
+#define OPCODE_GT    0x07
+#define OPCODE_EQ    0x08
 
-#define OPCODE_DUP  0x09
-#define OPCODE_DROP 0x0a
-#define OPCODE_SWAP 0x0b
-#define OPCODE_OVER 0x0c
+#define OPCODE_DUP   0x09
+#define OPCODE_DROP  0x0a
+#define OPCODE_SWAP  0x0b
+#define OPCODE_OVER  0x0c
+#define OPCODE_ROT   0x0d
 
-#define OPCODE_PUTI 0x0d // temporary!
+#define OPCODE_GET   0x0e
+#define OPCODE_SET   0x0f
+
+#define OPCODE_PUTI  0x10 // temporary!
 
 #define INSTRUCTIONS        \
   X("i",       OPCODE_I)    \
@@ -42,6 +46,10 @@
   X("drop",    OPCODE_DROP) \
   X("swap",    OPCODE_SWAP) \
   X("over",    OPCODE_OVER) \
+  X("rot",     OPCODE_ROT) \
+                            \
+  X("get",     OPCODE_GET) \
+  X("set",     OPCODE_SET) \
                             \
   X("puti",    OPCODE_PUTI) \
 

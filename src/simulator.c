@@ -77,18 +77,20 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory,
     if (addr >= memsize) return "segmentation fault";
     uint8_t opcode = memory[addr];
 
-    printf("<%d (0x%04x) '%s", addr, addr, mnemonics[opcode]);
+    #ifdef TRACER
+      printf("<%d (0x%04x) '%s", addr, addr, mnemonics[opcode]);
 
-    if (opcode == OPCODE_PUSH)
-      printf(" %d (0x%04x)", memory[addr+1], memory[addr+1]);
-    printf("'>");
+      if (opcode == OPCODE_PUSH)
+        printf(" %d (0x%04x)", memory[addr+1], memory[addr+1]);
+      printf("'>");
 
-    if (dstack->head > 0)
-      printf(" ~ ");
-    for (size_t i = 0; i < dstack->head; i++) {
-      printf("%d ", dstack->data[i]);
-    }
-    printf("\n");
+      if (dstack->head > 0)
+        printf(" ~ ");
+      for (size_t i = 0; i < dstack->head; i++) {
+        printf("%d ", dstack->data[i]);
+      }
+      printf("\n");
+    #endif // TRACER
 
     switch (opcode) {
       case OPCODE_I: {
@@ -126,6 +128,15 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory,
         POP(val);
       } break;
 
+      case OPCODE_SWAP: {
+        uint16_t b;
+        POP(b);
+        uint16_t a;
+        POP(a);
+        PUSH(b);
+        PUSH(a);
+      } break;
+
       case OPCODE_OVER: {
         uint16_t b;
         POP(b);
@@ -136,13 +147,30 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory,
         PUSH(a);
       } break;
 
-      case OPCODE_SWAP: {
+      case OPCODE_ROT: {
+        uint16_t c;
+        POP(c);
         uint16_t b;
         POP(b);
         uint16_t a;
         POP(a);
         PUSH(b);
+        PUSH(c);
         PUSH(a);
+      } break;
+
+      case OPCODE_GET: {
+        uint16_t a;
+        POP(a);
+        PUSH(memory[a]);
+      } break;
+
+      case OPCODE_SET: {
+        uint16_t val;
+        POP(val);
+        uint16_t a;
+        POP(a);
+        memory[a] = val;
       } break;
 
       case OPCODE_PUTI: {
@@ -184,7 +212,9 @@ const char *simulate(const char *s) {
 
   DStack dstack = {0};
 
-  printf("%s\n", s);
+  #ifdef TRACER
+    printf("%s\n", s);
+  #endif // TRACER
 
   while (*s) {
     char c = *s++;

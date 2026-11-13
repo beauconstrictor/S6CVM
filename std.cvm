@@ -1,1 +1,4 @@
 {:if <condition true -- > (if-else {})}
+
+{:dec <n -- n-1> (sub 1)}
+{:inc <n -- n-1> (add 1)}
