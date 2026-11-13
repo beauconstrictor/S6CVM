@@ -1,24 +1,24 @@
 import std
 
-var countdown[2]
+const COUNT = 23
+
+var countdown[int]
 
 {:fib-from <a b -- >
-  (set countdown (dec (get countdown)))
+  (while {(gt (get countdown) 0)} {
+    (puti over
+          over
+          add
+          rot
+          drop
+          dup)
 
-  (if (gt (get countdown) 1) {
-    (fib-from (puti
-      over
-      over
-      add
-      rot
-      drop
-      dup
-    ))
+    (set countdown (dec (get countdown)))
   })
 }
 
 {:main
-  (set countdown 25)
+  (set countdown COUNT)
   (puti 0)
   (puti 1)
   (fib-from 0 1)

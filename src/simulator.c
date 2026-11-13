@@ -110,6 +110,37 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory,
         return NULL;
       } break;
 
+      case OPCODE_IF: {
+        uint16_t false_block;
+        POP(false_block);
+        uint16_t true_block;
+        POP(true_block);
+        uint16_t condition;
+        POP(condition);
+
+        if (condition == 0)
+          CALL(false_block);
+        else
+          CALL(true_block);
+      } break;
+
+      case OPCODE_WHIL: {
+        uint16_t subroutine;
+        POP(subroutine);
+        uint16_t checker;
+        POP(checker);
+        uint16_t condition;
+  
+        CALL(checker);
+        POP(condition);
+
+        while (condition) {
+          CALL(subroutine);
+          CALL(checker);
+          POP(condition);
+        }
+      } break;
+
       BINARY_OPERATOR(ADD, a + b)
       BINARY_OPERATOR(SUB, a - b)
 
@@ -177,20 +208,6 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory,
         uint16_t val;
         POP(val);
         printf("%u\n", val);
-      } break;
-
-      case OPCODE_IF: {
-        uint16_t false_block;
-        POP(false_block);
-        uint16_t true_block;
-        POP(true_block);
-        uint16_t condition;
-        POP(condition);
-
-        if (condition == 0)
-          CALL(false_block);
-        else
-          CALL(true_block);
       } break;
 
       default: {

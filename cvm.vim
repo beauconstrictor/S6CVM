@@ -13,7 +13,7 @@ syntax keyword cvm_builtin
       \ i
       \ add sub dec
       \ gt eq
-      \ dup drop swap over
+      \ dup drop swap over rot
       \ puti
 
 highlight link cvm_loop Repeat
