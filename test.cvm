@@ -1,35 +1,21 @@
 import std
 
-const COUNT = 25 <because countdown is 2 bytes, the numbers will wrap after the 25th fib, so we stop there>
+const COUNT = 9
 
-var countdown[2]
-
-{:fib-next <a b -- b c>
-  over
-  over
-  add
-  rot
-  drop
+{:fact <n -- !n>
+  (if-else (eq dup 0) {
+    drop 1
+  } {(if (gt dup 1) {
+    (mul (fact (dec dup)))
+  })})
 }
 
-{:fib-from <a b -- >
-  (while {(gt (get countdown) 0)} {
-    (puti (dup fib-next))
-    (set countdown (dec (get countdown)))
+{:main
+  (puts "first 9 factorials:")
+
+  (while 0 {(not (eq dup COUNT))} {
+    (puti (fact dup))
+
+    inc
   })
-  drop drop
-}
-
-{:main
-  (puts "25 Fibonacci numbers:")
-  (puti 0)
-  (puti 1)
-  (set countdown (sub COUNT 2))
-  (fib-from 0 1)
-}
-
-import std
-
-{:main
-  (puti (mul 5 6))
 }
