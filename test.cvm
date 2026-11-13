@@ -9,8 +9,7 @@ import std
 
 {:fibfrom
   (puti (fib dup))
-  (add 1)
-  fibfrom
+  (fibfrom (add 1))
 }
 
 {:main
