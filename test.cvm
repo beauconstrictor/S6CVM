@@ -21,7 +21,7 @@ var countdown[2]
 }
 
 {:main
-  (puts "Hello, world!")
+  (if 0 { (puts "Hello, world!") })
 }
 
 {:test

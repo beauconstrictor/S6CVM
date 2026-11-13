@@ -1,3 +1,6 @@
+const true = 1
+const false = 0
+
 {:if <condition true -- > (if-else {})}
 {:do-while <condition body -- > dup i while}
 
