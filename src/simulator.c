@@ -4,6 +4,8 @@
 
 #include "assembler.h"
 
+// #define TRACER
+
 int hex_nibble(char c) {
   if (c >= '0' && c <= '9')
       return c - '0';
@@ -80,8 +82,10 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory,
     #ifdef TRACER
       printf("<%d (0x%04x) '%s", addr, addr, mnemonics[opcode]);
 
-      if (opcode == OPCODE_PUSH)
-        printf(" %d (0x%04x)", memory[addr+1], memory[addr+1]);
+      if (opcode == OPCODE_PUSH) {
+        uint16_t val = (memory[addr+1] << 8) | memory[addr + 2];
+        printf(" %d (0x%04x)", val, val);
+      }
       printf("'>");
 
       if (dstack->head > 0)

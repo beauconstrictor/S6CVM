@@ -1,6 +1,6 @@
 import std
 
-const COUNT = 25
+const COUNT = 25 <because countdown is 2 bytes, the numbers will wrap after the 25th fib, so we stop there>
 
 var countdown[2]
 
@@ -21,15 +21,15 @@ var countdown[2]
 }
 
 {:main
-  (do-while {
-    (puts "HELLO WORLD")
-  } {false})
-}
-
-{:test
   (puts "25 Fibonacci numbers:")
   (puti 0)
   (puti 1)
   (set countdown (sub COUNT 2))
   (fib-from 0 1)
+}
+
+import std
+
+{:main
+  (puti (mul 5 6))
 }

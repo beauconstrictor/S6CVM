@@ -4,6 +4,8 @@ const false = 0
 {:if <condition true -- > (if-else {})}
 {:do-while <body condition -- > swap dup i while}
 
+{:not <n -- !n> (if-else {false} {true})}
+
 {:puts <s -- >
   (while {(get dup)} {
     (putc (get dup))
@@ -15,3 +17,23 @@ const false = 0
 
 {:dec <n -- n-1> (sub 1)}
 {:inc <n -- n-1> (add 1)}
+
+{:mul <a b -- a*b>
+  (swap 0)
+
+  (while {dup} {
+    rot
+    rot
+    swap
+    dup
+    rot
+    add
+    rot
+    dec
+  })
+  
+  drop
+  swap
+  drop
+}
+
