@@ -210,7 +210,7 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
       FLUSH_TOK(TOKEN_NUMBER);
       continue;
     } else if (*s == ':' && start == s) {
-      EXHAUST(!isspace);
+      EXHAUST_UNTIL(" \n\t\r\f}");
       start++;
       FLUSH_TOK(TOKEN_DEFINITION);
       continue;
