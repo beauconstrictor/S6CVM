@@ -9,6 +9,10 @@
 
 #include "tokeniser.h"
 
+#define LOWER_LETTERS "abcdefghijklmnopqrstuvwxyz"
+#define UPPER_LETTERS "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+#define DIGITS "0123456789"
+
 const char *token_kind_name(TokenKind kind) {
     switch (kind) {
         #define X(name) case TOKEN_##name: return #name;
@@ -131,6 +135,11 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
       while (!strchr(chrs, *++s)) {} \
     } while (false)
 
+  #define EXHAUST_CHRS(chrs) \
+    do { \
+      while (strchr(chrs, *++s)) {} \
+    } while (false)
+
   #define SPECIAL_WORD(name, kind) \
     do { \
       if (strncmp(s, name " ", sizeof(name)) == 0) { \
@@ -206,11 +215,11 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
     } else if ((isdigit((unsigned char)*s)
         || (*s == '-' && isdigit((unsigned char)s[1])))
         && start == s) {
-      EXHAUST(isdigit);
+      EXHAUST_CHRS(UPPER_LETTERS LOWER_LETTERS DIGITS "-_.");
       FLUSH_TOK(TOKEN_NUMBER);
       continue;
     } else if (*s == ':' && start == s) {
-      EXHAUST_UNTIL(" \n\t\r\f}");
+      EXHAUST(isalnum);
       start++;
       FLUSH_TOK(TOKEN_DEFINITION);
       continue;
