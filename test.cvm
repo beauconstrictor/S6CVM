@@ -4,17 +4,20 @@ const COUNT = 23
 
 var countdown[2]
 
+{:fib-next <a b -- b c>
+  over
+  over
+  add
+  rot
+  drop
+}
+
 {:fib-from <a b -- >
   (while {(gt (get countdown) 0)} {
-    (puti over
-          over
-          add
-          rot
-          drop
-          dup)
-
+    (puti (dup fib-next))
     (set countdown (dec (get countdown)))
   })
+  drop drop
 }
 
 {:main
