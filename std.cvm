@@ -1,5 +1,14 @@
 {:if <condition true -- > (if-else {})}
 {:do-while <condition body -- > dup i while}
 
+{:puts <s -- >
+  (while {(get dup)} {
+    (putc (get dup))
+    inc
+  })
+  drop
+  (putc 10)
+}
+
 {:dec <n -- n-1> (sub 1)}
 {:inc <n -- n-1> (add 1)}

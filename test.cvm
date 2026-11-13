@@ -2,7 +2,7 @@ import std
 
 const COUNT = 23
 
-var countdown[int]
+var countdown[2]
 
 {:fib-from <a b -- >
   (while {(gt (get countdown) 0)} {

@@ -210,6 +210,12 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory,
         printf("%u\n", val);
       } break;
 
+      case OPCODE_PUTC: {
+        uint16_t val;
+        POP(val);
+        putchar(val);
+      } break;
+
       default: {
         snprintf(err_msg, sizeof(err_msg),
             "unsupported opcode: 0x%02x @ %d (0x%04x)", opcode,

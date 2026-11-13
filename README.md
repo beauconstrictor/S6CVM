@@ -2,19 +2,14 @@
 
 `cvmc` is a compiler for the CVM (Compact Virtual Machine) programming language, designed to produce extremely small, cross-platform binaries targeting the Compact Virtual Machine. The CVM is a minimal bytecode VM that can quickly be implemented on custom, limited hardware, immediately providing an expressive, high-level programming language for that machine.
 
-Here is a sample of the CVM language:
+Here is CVM's 'Hello, world!' program:
 
 ```lisp
 import std
 
-{:fib <n -- fib(n)>
-    (if (gt 1), {
-        (add (fib (sub dup, 1)), (fib (sub over, 2)))
-        (drop swap)
-    })
+{:main
+  (puts "Hello, world!")
 }
-
-{:main (puti (fib 5))}
 ```
 
 The design of the language closely mimics the design of the virtual machine itself, making binary size easy to predict and minimise.

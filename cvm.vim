@@ -14,7 +14,7 @@ syntax keyword cvm_builtin
       \ add sub dec
       \ gt eq
       \ dup drop swap over rot
-      \ puti
+      \ puti puts putc
 
 highlight link cvm_loop Repeat
 highlight link cvm_if Conditional
