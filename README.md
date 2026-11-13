@@ -1,4 +1,4 @@
-# CVMC
+# CVMC - Compact Virtual Machine Compiler
 
 `cvmc` is a compiler for the CVM (Compact Virtual Machine) programming language, designed to produce extremely small, cross-platform binaries targeting the Comapact Virtual Machine. The CVM is a minimal bytecode VM that can quickly be implemented on custom, limited hardware, immediately providing an expressive, high-level programming language for that machine.
 
