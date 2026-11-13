@@ -4,7 +4,7 @@
 
 Here is a sample of the CVM language:
 
-```forth
+```lisp
 import std
 
 {:fib <n -- fib(n)>
