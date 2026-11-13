@@ -7,11 +7,11 @@ import std
     })
 }
 
-{:fibfrom
+{:fib-from
   (puti (fib dup))
-  (fibfrom (add 1))
+  (fib-from (add 1))
 }
 
 {:main
-  (fibfrom 1)
+  (fib-from 1)
 }

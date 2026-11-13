@@ -6,6 +6,11 @@
 #include "tokeniser.h"
 #include "parser.h"
 
+/*
+ * TODO: if compilation starts getting low, implement binary search
+ *       in the symbol resolution system (or maybe even a hashmap)
+ */
+
 bool append_symbol(Symbol sym, Symbols *syms) {
   if (syms->count < syms->capacity) {
     syms->items[syms->count++] = sym;

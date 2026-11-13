@@ -77,18 +77,18 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory,
     if (addr >= memsize) return "segmentation fault";
     uint8_t opcode = memory[addr];
 
-    // printf("<%d (0x%04x) '%s", addr, addr, mnemonics[opcode]);
+    printf("<%d (0x%04x) '%s", addr, addr, mnemonics[opcode]);
 
-    // if (opcode == OPCODE_PUSH)
-    //   printf(" %d (0x%04x)", memory[addr+1], memory[addr+1]);
-    // printf("'>");
+    if (opcode == OPCODE_PUSH)
+      printf(" %d (0x%04x)", memory[addr+1], memory[addr+1]);
+    printf("'>");
 
-    // if (dstack->head > 0)
-    //   printf(" ~ ");
-    // for (size_t i = 0; i < dstack->head; i++) {
-    //   printf("%d ", dstack->data[i]);
-    // }
-    // printf("\n");
+    if (dstack->head > 0)
+      printf(" ~ ");
+    for (size_t i = 0; i < dstack->head; i++) {
+      printf("%d ", dstack->data[i]);
+    }
+    printf("\n");
 
     switch (opcode) {
       case OPCODE_I: {

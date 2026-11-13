@@ -215,11 +215,11 @@ bool lexer(const char *s, const char *path, Tokens *toks, Error *error) {
     } else if ((isdigit((unsigned char)*s)
         || (*s == '-' && isdigit((unsigned char)s[1])))
         && start == s) {
-      EXHAUST_CHRS(UPPER_LETTERS LOWER_LETTERS DIGITS "-_.");
+      EXHAUST(isdigit);
       FLUSH_TOK(TOKEN_NUMBER);
       continue;
     } else if (*s == ':' && start == s) {
-      EXHAUST(isalnum);
+      EXHAUST_CHRS(UPPER_LETTERS LOWER_LETTERS DIGITS "-_.");
       start++;
       FLUSH_TOK(TOKEN_DEFINITION);
       continue;
