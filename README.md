@@ -1,15 +1,13 @@
-## S6CVM
+# CVMC
 
-S6CVM is a development toolchain for the [Ozpex S6](https://github.com/beauconstrictor/s6emu) platform, which focuses on producing extremely small binaries. It achieves this by using a bytecode virtual machine, and a compiler that runs on a separate machine, targeting this VM.
+`cvmc` is a compiler for the CVM (Compact Virtual Machine) programming language, designed to produce extremely small, cross-platform binaries targeting the Comapact Virtual Machine. The CVM is a minimal bytecode VM that can quickly be implemented on custom, limited hardware, immediately providing an expressive, high-level programming language for that machine.
 
-S6CVM code is considerably slower than the other alternative toolchain for S6 development, [S6ASM](https://github.com/beauconstrictor/s6asm), which produces native code. However, it is impossible to write nontrivial programs in S6 assembly as a result of the inefficient instruction set and limited ROM size. S6CVM eschews this problem, by defining it's own instruction set that runs _on top_ of the S6.
+Here is a sample of the CVM language:
 
-which is written in S6 assembly. The virtual machine is resident in system ROM, and simply prompts you to insert a tape, containing a binary from the `s6cvm` compiler.
+```forth
+import std
 
-Here is a sample of the programming language:
-
-```
-{:fib <n : fib(n)>
+{:fib <n -- fib(n)>
     (if (gt 1), {
         (add (fib (sub dup, 1)), (fib (sub over, 2)))
         (drop swap)
@@ -19,4 +17,23 @@ Here is a sample of the programming language:
 {:main (puti (fib 5))}
 ```
 
-This is a simple `.cvm` (the file extension used for this language's source code) subroutine that computes the 5'th Fibonacci number.
+The design of the language closely mimics the design of the virtual machine itself, making binary size easy to predict and minimise.
+
+There is a reference manual in the works that will provide more thorough details on programming in the language itself.
+
+## Installation
+
+To install `cvmc`, you will need to install `clang` and `make`. Then, just run these commands to build a binary which you can move into your PATH:
+
+```sh
+$ git clone https://github.com/beauconstrictor/cvmc
+$ make
+```
+
+The binary will be located in `cvmc/build/cvmc`. Once you have moved the binary into your PATH, verify that it is installed correctly:
+
+```sh
+$ cvmc -v
+```
+
+If you use Vim, there is also a syntax highlighter included in this repo, called `cvm.vim`.

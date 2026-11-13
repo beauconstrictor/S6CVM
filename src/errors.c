@@ -82,7 +82,7 @@ void check_error(const Error *error) {
   if (error->set) {
     print_error(error);
   } else {
-    perror("s6cvm");
+    perror("cvmc");
   }
   exit(1);
 }
@@ -90,7 +90,7 @@ void check_error(const Error *error) {
 void cli_error(const char *s, const char *binary) {
   Colours cols = get_colours();
 
-  fprintf(stderr, "%ss6cvm: %s", cols.red, cols.reset);
+  fprintf(stderr, "%scvmc: %s", cols.red, cols.reset);
   fprintf(stderr, s, binary);
   fprintf(stderr, "\n");
   exit(1);

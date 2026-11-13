@@ -1,7 +1,7 @@
 CC = clang
 CFLAGS = -Wall -Wextra -Werror -g
 DEPFLAGS = -MMD -MP
-TARGET = build/s6cvm
+TARGET = build/cvmc
 
 SRCS = $(wildcard src/*.c)
 OBJS = $(patsubst src/%.c,build/%.o,$(SRCS))

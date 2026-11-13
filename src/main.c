@@ -15,7 +15,7 @@
               "Try passing '-h' for more information.\n"
 
 #define HELP "Usage: %s [OPTION]... FILE \n" \
-             "Compile S6CVM programs.\n" \
+             "Compile CVM programs.\n" \
              "\n" \
              "Options:\n" \
              "\t-h  Show this message and exit\n" \
@@ -36,7 +36,7 @@
                 "Licensed under the FOSS MIT license.\n" \
                 "\n" \
                 "Written by Beau Constrictor; see\n" \
-                "<https://github.com/beauconstrictor/s6cvm>\n"
+                "<https://github.com/beauconstrictor/cvmc>\n"
 
 typedef enum {
   MODE_LEXER,
