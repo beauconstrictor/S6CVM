@@ -211,7 +211,7 @@ const char *execute(DStack *dstack, uint16_t addr, uint8_t *memory,
       case OPCODE_PUTI: {
         uint16_t val;
         POP(val);
-        printf("%u\n", val);
+        printf("%u", val);
       } break;
 
       case OPCODE_PUTC: {

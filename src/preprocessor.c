@@ -27,12 +27,23 @@
 
 #include "preprocessor.h"
 
-#define ALLOC_START 0x38b0
-#define ALLOC_MAX   0x6fff
-
 /*
  * TODO: use GIVE_ERROR everywhere
  */
+
+#define ALLOC_START 0x38b0
+#define ALLOC_MAX   0x6fff
+
+const int escapes[] = {
+  ['\\'] = '\\',
+  ['b'] =  '\b',
+  ['n'] =  '\n',
+  ['r'] =  '\r',
+  ['0'] =  -1,
+  ['f'] =  '\f',
+  ['t'] =  '\t',
+  ['e'] =  '\033',
+};
 
 bool deparenthesise(Tokens *toks, Error *error) {
   Tokens prefix_words = create_tokens();
@@ -116,10 +127,30 @@ bool destringify(Tokens *toks, Error *error) {
     // so i think it's fine. maybe revisit?
 
     const char *s = tok.start;
+    bool in_escape = false;
+
     while (s < tok.start + tok.length) {
       char *num = malloc(4);
       if (num == NULL) return false;
-      int len = snprintf(num, 4, "%d", *s);
+
+      char c = *s;
+
+      if (c == '\\' && !in_escape) {
+        in_escape = true;
+        s++;
+        continue;
+      }
+
+      if (in_escape) {
+        c = escapes[(int)c];
+        if (c == 0)
+          GIVE_ERROR("invalid escape sequence", tok);
+        if (c == -1)
+          c = 0;
+        in_escape = false;
+      }
+
+      int len = snprintf(num, 4, "%d", c);
 
       if (!insert_token(toks, ++i, (Token) {
           .kind = TOKEN_BYTE,

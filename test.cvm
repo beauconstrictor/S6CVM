@@ -11,11 +11,14 @@ const COUNT = 9
 }
 
 {:main
-  (puts "first 9 factorials:")
+  (puts "first 9 factorials: ")
 
   (while 0 {(not (eq dup COUNT))} {
     (puti (fact dup))
+    (puts ", ")
 
     inc
   })
+
+  (puts "\b\b ")
 }

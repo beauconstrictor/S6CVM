@@ -12,8 +12,9 @@ const false = 0
     inc
   })
   drop
-  (putc 10)
 }
+
+{:putl <s -- > puts (putc 10)}
 
 {:dec <n -- n-1> (sub 1)}
 {:inc <n -- n-1> (add 1)}

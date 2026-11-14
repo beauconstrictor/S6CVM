@@ -11,10 +11,10 @@ syntax keyword cvm_keyword
 
 syntax keyword cvm_builtin
       \ i
-      \ add sub dec
+      \ add sub inc dec mul
       \ gt eq
       \ dup drop swap over rot
-      \ puti puts putc
+      \ putc puti puts putl
 
 highlight link cvm_loop Repeat
 highlight link cvm_if Conditional
