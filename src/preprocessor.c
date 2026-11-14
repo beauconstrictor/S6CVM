@@ -143,10 +143,11 @@ bool destringify(Tokens *toks, Error *error) {
 
       if (in_escape) {
         c = escapes[(int)c];
-        if (c == 0)
-          GIVE_ERROR("invalid escape sequence", tok);
-        if (c == -1)
-          c = 0;
+        if (c == 0) {
+          char err_msg[256];
+          snprintf(err_msg, sizeof(err_msg), "invalid escape sequence: '\\%c'", c);
+          GIVE_ERROR(err_msg, tok);
+        } if (c == -1) c = 0;
         in_escape = false;
       }
 

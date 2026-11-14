@@ -20,5 +20,5 @@ const COUNT = 9
     inc
   })
 
-  (puts "\b\b ")
+  (puts "\b\b\x ")
 }
